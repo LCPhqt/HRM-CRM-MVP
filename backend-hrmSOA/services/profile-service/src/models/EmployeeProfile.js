@@ -1,0 +1,18 @@
+const mongoose = require('mongoose');
+
+const profileSchema = new mongoose.Schema(
+  {
+    userId: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
+    fullName: String,
+    dob: String,
+    phone: String,
+    address: String,
+    department: String,
+    position: String
+  },
+  { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } }
+);
+
+module.exports = mongoose.model('EmployeeProfile', profileSchema);
+
