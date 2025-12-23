@@ -62,5 +62,17 @@ async function updateEmployee(token, id, payload) {
   return { ...userRes.data, profile: profileRes.data || null };
 }
 
-module.exports = { listEmployees, getEmployee, deleteEmployee, updateEmployee };
+async function createEmployee(payload) {
+  // Reuse identity-service register endpoint; role mặc định staff
+  const { email, password, confirm_password, full_name } = payload;
+  const res = await axios.post(`${IDENTITY_SERVICE_URL}/auth/register`, {
+    email,
+    password,
+    confirm_password,
+    full_name
+  });
+  return res.data;
+}
+
+module.exports = { listEmployees, getEmployee, deleteEmployee, updateEmployee, createEmployee };
 

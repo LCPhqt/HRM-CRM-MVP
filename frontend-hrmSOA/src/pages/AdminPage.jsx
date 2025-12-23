@@ -8,6 +8,8 @@ function AdminPage() {
   const [filter, setFilter] = useState('');
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [editing, setEditing] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [addForm, setAddForm] = useState({ full_name: '', email: '', password: '', confirm_password: '' });
 
   const fetchEmployees = async () => {
     try {
@@ -104,7 +106,13 @@ function AdminPage() {
           <button className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 shadow-sm hover:border-indigo-200">
             ⚙ Bộ lọc: Tất cả
           </button>
-          <button className="px-4 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-300 hover:bg-indigo-700">
+          <button
+            className="px-4 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-300 hover:bg-indigo-700"
+            onClick={() => {
+              setAddForm({ full_name: '', email: '', password: '', confirm_password: '' });
+              setAdding(true);
+            }}
+          >
             + Thêm nhân viên
           </button>
         </div>
@@ -237,6 +245,83 @@ function AdminPage() {
                   }}
                 >
                   Lưu
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {adding && (
+          <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-slate-800">Thêm nhân viên</h3>
+                <button className="text-slate-500 hover:text-slate-800" onClick={() => setAdding(false)}>
+                  ✕
+                </button>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm text-slate-600 font-medium">Họ và tên</label>
+                  <input
+                    className="w-full border rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+                    value={addForm.full_name}
+                    onChange={(e) => setAddForm((p) => ({ ...p, full_name: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-slate-600 font-medium">Email</label>
+                  <input
+                    className="w-full border rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+                    value={addForm.email}
+                    onChange={(e) => setAddForm((p) => ({ ...p, email: e.target.value }))}
+                  />
+                </div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-slate-600 font-medium">Mật khẩu</label>
+                    <input
+                      type="password"
+                      className="w-full border rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+                      value={addForm.password}
+                      onChange={(e) => setAddForm((p) => ({ ...p, password: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-600 font-medium">Nhập lại mật khẩu</label>
+                    <input
+                      type="password"
+                      className="w-full border rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+                      value={addForm.confirm_password}
+                      onChange={(e) => setAddForm((p) => ({ ...p, confirm_password: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="px-4 py-2 rounded-lg border text-slate-700 hover:bg-slate-100"
+                  onClick={() => setAdding(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                  onClick={async () => {
+                    if (addForm.password !== addForm.confirm_password) {
+                      alert('Mật khẩu nhập lại không khớp');
+                      return;
+                    }
+                    try {
+                      await client.post('/admin/employees', addForm);
+                      setAdding(false);
+                      await fetchEmployees();
+                    } catch (err) {
+                      alert(err.response?.data?.message || err.message);
+                    }
+                  }}
+                >
+                  Tạo tài khoản
                 </button>
               </div>
             </div>
