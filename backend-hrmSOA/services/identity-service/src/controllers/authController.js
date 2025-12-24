@@ -7,7 +7,7 @@ async function register(req, res) {
     if (!email || !password) return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
     if (password !== confirmPassword) return res.status(400).json({ message: 'Mật khẩu nhập lại không khớp' });
     const result = await authService.register(email, password, fullName);
-    return res.status(201).json({ accessToken: result.token, role: result.role });
+    return res.status(201).json({ accessToken: result.token, role: result.role, user: result.user });
   } catch (err) {
     const status = err.status || 500;
     return res.status(status).json({ message: err.message || 'Registration failed' });

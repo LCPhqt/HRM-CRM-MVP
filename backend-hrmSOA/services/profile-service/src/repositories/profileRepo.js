@@ -13,6 +13,8 @@ const toDto = (doc) => {
     address: d.address ?? null,
     department: d.department ?? null,
     position: d.position ?? null,
+    salary: d.salary ?? null,
+    bonus: d.bonus ?? null,
     created_at: d.createdAt ?? null,
     updated_at: d.updatedAt ?? null
   };
@@ -26,7 +28,9 @@ async function upsertProfile(userId, email, payload) {
     phone: payload.phone ?? null,
     address: payload.address ?? null,
     department: payload.department ?? null,
-    position: payload.position ?? null
+    position: payload.position ?? null,
+    salary: payload.salary ?? null,
+    bonus: payload.bonus ?? null
   };
   const doc = await EmployeeProfile.findOneAndUpdate(
     { userId },

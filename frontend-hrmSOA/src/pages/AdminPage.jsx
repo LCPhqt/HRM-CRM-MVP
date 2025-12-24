@@ -1,15 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import EmployeeTable from '../components/EmployeeTable';
 import { useAuth } from '../context/AuthContext';
 
 function AdminPage() {
   const { client, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [employees, setEmployees] = useState([]);
   const [filter, setFilter] = useState('');
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [editing, setEditing] = useState(null);
   const [adding, setAdding] = useState(false);
-  const [addForm, setAddForm] = useState({ full_name: '', email: '', password: '', confirm_password: '' });
+  const [addForm, setAddForm] = useState({
+    full_name: '',
+    email: '',
+    password: '',
+    confirm_password: '',
+    salary: ''
+  });
 
   const fetchEmployees = async () => {
     try {
@@ -49,21 +58,26 @@ function AdminPage() {
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {[
-            { label: 'Tổng quan', active: false, icon: '🏠' },
-            { label: 'Nhân viên', active: true, icon: '👥' },
-            { label: 'Phòng ban', active: false, icon: '🏢' },
-            { label: 'Lương thưởng', active: false, icon: '💰' },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                item.active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'hover:bg-slate-800'
-              }`}
-            >
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </div>
-          ))}
+            { label: 'Tổng quan', icon: '🏠', path: '/home' },
+            { label: 'Nhân viên', icon: '👥', path: '/admin' },
+            { label: 'Phòng ban', icon: '🏢', path: '/departments' },
+            { label: 'Lương thưởng', icon: '💰', path: '/payroll' },
+          ].map((item) => {
+            const active = location.pathname.startsWith(item.path);
+            return (
+              <button
+                type="button"
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${
+                  active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'hover:bg-slate-800'
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center gap-3 bg-slate-800/80 px-3 py-2 rounded-lg">
@@ -109,7 +123,7 @@ function AdminPage() {
           <button
             className="px-4 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-300 hover:bg-indigo-700"
             onClick={() => {
-              setAddForm({ full_name: '', email: '', password: '', confirm_password: '' });
+              setAddForm({ full_name: '', email: '', password: '', confirm_password: '', salary: '' });
               setAdding(true);
             }}
           >
@@ -139,7 +153,8 @@ function AdminPage() {
               position: emp.position || profile.position || '',
               phone: profile.phone || '',
               address: profile.address || '',
-              dob: profile.dob || ''
+              dob: profile.dob || '',
+              salary: profile.salary ?? ''
             });
           }}
           onRemove={async (emp) => {
@@ -222,6 +237,16 @@ function AdminPage() {
                     onChange={(e) => setEditing((prev) => ({ ...prev, dob: e.target.value }))}
                   />
                 </div>
+                <div>
+                  <label className="text-sm text-slate-600 font-medium">Lương cơ bản</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full border rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+                    value={editing.salary || ''}
+                    onChange={(e) => setEditing((prev) => ({ ...prev, salary: e.target.value }))}
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-3">
                 <button
@@ -297,6 +322,18 @@ function AdminPage() {
                     />
                   </div>
                 </div>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm text-slate-600 font-medium">Lương cơ bản</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full border rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+                    value={addForm.salary}
+                    onChange={(e) => setAddForm((p) => ({ ...p, salary: e.target.value }))}
+                  />
+                </div>
+              </div>
               </div>
               <div className="flex justify-end gap-3">
                 <button
