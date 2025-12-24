@@ -16,7 +16,7 @@ async function updateEmployee(req, res) {
 }
 
 async function createEmployee(req, res) {
-  const data = await adminService.createEmployee(req.body || {});
+  const data = await adminService.createEmployee(req.token, req.body || {});
   return res.status(201).json(data);
 }
 

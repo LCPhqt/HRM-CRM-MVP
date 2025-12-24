@@ -9,7 +9,9 @@ const profileSchema = new mongoose.Schema(
     phone: String,
     address: String,
     department: String,
-    position: String
+    position: String,
+    salary: { type: Number, default: null },
+    bonus: { type: Number, default: null }
   },
   { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } }
 );

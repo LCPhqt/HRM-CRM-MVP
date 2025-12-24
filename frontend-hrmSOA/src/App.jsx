@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import PayrollPage from './pages/PayrollPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function AppShell() {
@@ -33,6 +34,14 @@ function AppShell() {
           element={
             <ProtectedRoute role="admin">
               <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payroll"
+          element={
+            <ProtectedRoute role="admin">
+              <PayrollPage />
             </ProtectedRoute>
           }
         />

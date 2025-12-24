@@ -28,7 +28,7 @@ async function register(email, password, fullName) {
   }
 
   const token = sign({ id: user.id, email: user.email, role: user.role });
-  return { token, role: user.role };
+  return { token, role: user.role, user };
 }
 
 async function login(email, password) {

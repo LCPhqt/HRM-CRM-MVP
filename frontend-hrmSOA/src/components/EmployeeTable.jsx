@@ -33,6 +33,8 @@ function EmployeeTable({ employees = [], expandedIds = new Set(), onView, onEdit
             const email = emp.email || profile.email || '-';
             const position = emp.position || profile.position || 'Đang cập nhật';
             const department = emp.department || profile.department || 'Chưa gán';
+            const salary = profile.salary ?? emp.salary;
+            const employeeId = emp.id || emp.userId || emp._id || email;
             const joined =
               emp.joinedAt ||
               emp.joined_at ||
@@ -56,6 +58,7 @@ function EmployeeTable({ employees = [], expandedIds = new Set(), onView, onEdit
                         {initials}
                       </div>
                       <div>
+                        <div className="text-xs text-slate-400">ID: {employeeId}</div>
                         <div className="font-semibold text-slate-800">{fullName}</div>
                         <div className="text-xs text-slate-500">{email}</div>
                       </div>
@@ -100,6 +103,10 @@ function EmployeeTable({ employees = [], expandedIds = new Set(), onView, onEdit
                     <td colSpan={5} className="px-6 py-4">
                       <div className="grid md:grid-cols-3 gap-4 text-sm text-slate-700">
                         <div>
+                          <div className="text-xs uppercase text-slate-400">ID</div>
+                          <div className="text-slate-700">{employeeId}</div>
+                        </div>
+                        <div>
                           <div className="text-xs uppercase text-slate-400">Họ và tên</div>
                           <div className="font-semibold text-slate-800">{fullName}</div>
                         </div>
@@ -134,6 +141,10 @@ function EmployeeTable({ employees = [], expandedIds = new Set(), onView, onEdit
                         <div>
                           <div className="text-xs uppercase text-slate-400">Trạng thái</div>
                           <div className="text-slate-700">{status.label}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs uppercase text-slate-400">Lương cơ bản</div>
+                          <div className="text-slate-700">{salary != null ? salary : '--'}</div>
                         </div>
                       </div>
                     </td>

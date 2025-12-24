@@ -62,16 +62,38 @@ async function updateEmployee(token, id, payload) {
   return { ...userRes.data, profile: profileRes.data || null };
 }
 
-async function createEmployee(payload) {
+async function createEmployee(token, payload) {
   // Reuse identity-service register endpoint; role mặc định staff
-  const { email, password, confirm_password, full_name } = payload;
-  const res = await axios.post(`${IDENTITY_SERVICE_URL}/auth/register`, {
+  const { email, password, confirm_password, full_name, salary, bonus } = payload;
+  const registerRes = await axios.post(`${IDENTITY_SERVICE_URL}/auth/register`, {
     email,
     password,
     confirm_password,
     full_name
   });
-  return res.data;
+
+  // Nếu có thông tin lương thưởng, cập nhật hồ sơ ngay sau khi tạo user
+  if ((salary ?? bonus) !== undefined && registerRes.data?.user?.id) {
+    const headers = { Authorization: `Bearer ${token}` };
+    const userId = registerRes.data.user.id;
+    try {
+      await axios.put(
+        `${PROFILE_SERVICE_URL}/profiles/${userId}`,
+        {
+          email,
+          full_name,
+          salary,
+          bonus
+        },
+        { headers }
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to set salary/bonus for new employee', err?.message);
+    }
+  }
+
+  return registerRes.data;
 }
 
 module.exports = { listEmployees, getEmployee, deleteEmployee, updateEmployee, createEmployee };
