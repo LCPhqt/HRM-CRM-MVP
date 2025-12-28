@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import MainLayout from "../components/MainLayout";
 
 function HomePage() {
-  const { user, role, logout, client } = useAuth();
+  const { user, role, client } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -50,6 +50,7 @@ function HomePage() {
     arr.sort((a, b) => b[1] - a[1]);
     return arr;
   }, [employees]);
+
   const maxDeptCount = useMemo(
     () => Math.max(1, ...deptStats.map(([, count]) => count)),
     [deptStats]
@@ -57,6 +58,7 @@ function HomePage() {
 
   const formatMoney = (v) =>
     Number(v || 0).toLocaleString("vi-VN", { minimumFractionDigits: 0 }) + " đ";
+
   const hiringTrend = [
     { label: "T1", value: 6 },
     { label: "T2", value: 5 },
@@ -65,14 +67,6 @@ function HomePage() {
     { label: "T5", value: 10 },
     { label: "T6", value: 12 },
   ];
-  const maxHiring = Math.max(1, ...hiringTrend.map((i) => i.value));
-
-  const navItems = [
-    { label: "Tổng quan", icon: "📊", path: "/home" },
-    { label: "Nhân viên", icon: "👥", path: "/admin", adminOnly: true },
-    { label: "Phòng ban", icon: "🏢", path: "/departments", adminOnly: true },
-    { label: "Lương thưởng", icon: "💰", path: "/payroll", adminOnly: true },
-  ].filter((item) => !item.adminOnly || role === "admin");
 
   const today = new Date().toLocaleDateString("vi-VN", {
     weekday: "long",
@@ -81,203 +75,160 @@ function HomePage() {
   });
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-slate-200 flex flex-col">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-          <div className="h-10 w-10 rounded-xl bg-indigo-500 flex items-center justify-center text-white font-bold">
-            HR
+    <MainLayout
+      title="Tổng quan hệ thống"
+      subtitle="Báo cáo chi tiết về tình hình nhân sự và hoạt động của công ty."
+    >
+      {/* Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <div
+          className="bg-white rounded-2xl p-6 cursor-pointer card-hover relative overflow-hidden group border border-slate-100"
+          onClick={() => role === "admin" && navigate("/admin")}
+        >
+          <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <span className="text-8xl">👥</span>
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-widest text-slate-400">
-              HRM Core
+          <div className="relative z-10">
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Tổng nhân sự</p>
+            <div className="text-4xl font-bold text-slate-900 mt-2">{totalEmployees}</div>
+            <p className="text-xs font-medium text-emerald-600 mt-2 bg-emerald-50 inline-block px-2 py-1 rounded-lg">
+              ↗ +3 từ tháng trước
             </p>
-            <p className="text-sm font-semibold">Enterprise SOA</p>
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
-          {navItems.map((item) => {
-            const active = location.pathname.startsWith(item.path);
-            return (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  active
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                    : "hover:bg-slate-800"
-                }`}
-              >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        <div
+          className="bg-white rounded-2xl p-6 cursor-pointer card-hover relative overflow-hidden group border border-slate-100"
+          onClick={() => role === "admin" && navigate("/departments")}
+        >
+          <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <span className="text-8xl">🏢</span>
+          </div>
+          <div className="relative z-10">
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Phòng ban</p>
+            <div className="text-4xl font-bold text-slate-900 mt-2">{totalDepartments}</div>
+            <p className="text-xs font-medium text-indigo-600 mt-2 bg-indigo-50 inline-block px-2 py-1 rounded-lg">
+              Đang hoạt động
+            </p>
+          </div>
+        </div>
 
-        <div className="p-4 border-t border-slate-800">
-          <div className="flex items-center gap-3 bg-slate-800/80 px-3 py-2 rounded-lg">
-            <div className="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center text-white">
-              {user?.email?.[0]?.toUpperCase() || "A"}
+        <div className="bg-white rounded-2xl p-6 card-hover border border-slate-100">
+          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Quỹ lương (Est)</p>
+          <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight">
+            {formatMoney(avgSalary * totalEmployees || 0)}
+          </div>
+          <div className="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+            <div className="bg-amber-500 h-full rounded-full" style={{ width: '75%' }}></div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 card-hover border border-slate-100">
+          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Lương trung bình</p>
+          <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight">{formatMoney(avgSalary)}</div>
+          <p className="text-xs font-medium text-slate-400 mt-2">
+            Trên mỗi nhân viên
+          </p>
+        </div>
+      </div>
+
+      {/* Dashboard Content */}
+      <div className="grid gap-6 xl:grid-cols-3">
+        {/* Department Stats */}
+        <div className="bg-white rounded-3xl p-6 xl:col-span-2 shadow-sm border border-slate-100">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">Phân bổ nhân sự</h3>
+              <p className="text-sm text-slate-500">Thống kê nhân viên theo từng phòng ban</p>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">
-                {user?.email || "Đang trực tuyến"}
-              </p>
-              <p className="text-xs text-slate-400">{role === "admin" ? "Quản trị viên" : "Nhân viên"}</p>
-            </div>
-            <button
-              onClick={logout}
-              className="text-slate-400 hover:text-white text-lg"
-              title="Đăng xuất"
-            >
-              ↪
+            <button className="text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition">
+              Xem chi tiết
             </button>
           </div>
-        </div>
-      </aside>
 
-      {/* Main */}
-      <main className="flex-1 bg-slate-50">
-        <div className="px-10 pt-8 pb-4 space-y-6">
-          <header className="bg-gradient-to-r from-indigo-700 to-indigo-500 text-white rounded-3xl p-8 shadow-xl">
-            <p className="text-sm opacity-90 mb-1">Xin chào, {role === "admin" ? "Admin" : user?.email}</p>
-            <h1 className="text-3xl font-bold">Hệ thống đang hoạt động ổn định.</h1>
-            <p className="mt-2 text-sm text-indigo-100">
-              Dưới đây là báo cáo tổng quan về tình hình nhân sự của công ty trong tháng này.
-            </p>
-          </header>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div
-              className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 cursor-pointer hover:border-indigo-200 hover:shadow-md transition"
-              onClick={() => role === "admin" && navigate("/admin")}
-            >
-              <p className="text-sm text-slate-500">Tổng nhân sự</p>
-              <div className="text-3xl font-bold text-slate-900 mt-2">{totalEmployees}</div>
-              <p className="text-xs text-emerald-600 mt-1">↗ ổn định</p>
-            </div>
-            <div
-              className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 cursor-pointer hover:border-indigo-200 hover:shadow-md transition"
-              onClick={() => role === "admin" && navigate("/departments")}
-            >
-              <p className="text-sm text-slate-500">Phòng ban</p>
-              <div className="text-3xl font-bold text-slate-900 mt-2">{totalDepartments}</div>
-              <p className="text-xs text-indigo-600 mt-1">Đang hoạt động</p>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <p className="text-sm text-slate-500">Quỹ lương tháng (ước tính)</p>
-              <div className="text-3xl font-bold text-slate-900 mt-2">
-                {formatMoney(avgSalary * totalEmployees || 0)}
+          {loading ? (
+            <div className="h-80 flex items-center justify-center text-slate-400">Đang tải dữ liệu...</div>
+          ) : (
+            <div className="relative h-80 bg-slate-50/50 rounded-2xl border border-slate-100 p-6 flex items-end justify-around gap-4 group">
+              {/* Grid lines background */}
+              <div className="absolute inset-0 pointer-events-none p-6 flex flex-col justify-between opacity-30">
+                <div className="w-full border-t border-dashed border-slate-300"></div>
+                <div className="w-full border-t border-dashed border-slate-300"></div>
+                <div className="w-full border-t border-dashed border-slate-300"></div>
+                <div className="w-full border-t border-dashed border-slate-300"></div>
               </div>
-              <p className="text-xs text-amber-600 mt-1">Tính từ lương trung bình</p>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <p className="text-sm text-slate-500">Lương trung bình</p>
-              <div className="text-3xl font-bold text-slate-900 mt-2">{formatMoney(avgSalary)}</div>
-              <p className="text-xs text-emerald-600 mt-1">Trên mỗi nhân viên</p>
-            </div>
-          </div>
 
-          <div className="grid gap-6 xl:grid-cols-3">
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 xl:col-span-2">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm text-slate-500">Thống kê nhân sự</p>
-                  <h3 className="text-xl font-bold text-slate-900">Phân bổ nhân viên theo phòng ban</h3>
-                </div>
-                <span className="text-sm text-indigo-600 cursor-default flex items-center gap-1">
-                  Chi tiết <span className="text-base">↗</span>
-                </span>
-              </div>
-              {loading ? (
-                <p className="text-sm text-slate-500">Đang tải...</p>
-              ) : (
-                <div className="relative h-80 bg-slate-50 border border-slate-100 rounded-2xl p-4">
-                  <div
-                    className="absolute inset-4 rounded-xl pointer-events-none"
-                    style={{
-                      backgroundImage:
-                        "repeating-linear-gradient(to top, transparent, transparent 38px, rgba(148,163,184,0.2) 39px, rgba(148,163,184,0.2) 40px)",
-                    }}
-                  />
-                  <div className="relative h-full flex items-end justify-around gap-6">
-                    {deptStats.length === 0 && (
-                      <div className="text-sm text-slate-500">Chưa có dữ liệu phân bổ phòng ban.</div>
-                    )}
-                    {deptStats.map(([dep, count]) => (
-                      <div key={dep} className="flex flex-col items-center gap-2">
-                        <div
-                          className="w-12 rounded-xl bg-indigo-500 shadow-lg shadow-indigo-200"
-                          style={{
-                            height: `${(count / maxDeptCount) * 80 + 40}px`,
-                            minHeight: "40px",
-                          }}
-                          title={`${dep}: ${count}`}
-                        />
-                        <span className="text-xs text-slate-600 text-center w-24 leading-snug">
-                          {dep}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+              {deptStats.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">
+                  Chưa có dữ liệu phòng ban.
                 </div>
               )}
-            </div>
 
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col">
-              <p className="text-sm text-slate-500">Xu hướng tuyển dụng</p>
-              <h3 className="text-xl font-bold text-slate-900 mb-4">Tăng trưởng nhân sự 6 tháng</h3>
-              <div className="flex-1 flex items-center justify-center">
-                <div className="w-full h-56 bg-white rounded-2xl relative overflow-hidden border border-slate-100">
-                  <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/80 via-white to-white" />
-                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 300 200" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="trendFill" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.05" />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="
-                        M 0 140
-                        C 40 110, 70 120, 100 140
-                        C 120 150, 140 140, 160 110
-                        C 190 70, 230 60, 300 40
-                        L 300 200 L 0 200 Z
-                      "
-                      fill="url(#trendFill)"
-                      stroke="none"
-                    />
-                    <path
-                      d="
-                        M 0 140
-                        C 40 110, 70 120, 100 140
-                        C 120 150, 140 140, 160 110
-                        C 190 70, 230 60, 300 40
-                      "
-                      fill="none"
-                      stroke="#8b5cf6"
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-x-0 bottom-12 px-4 flex justify-between text-xs text-slate-500">
-                    {hiringTrend.map((item) => (
-                      <span key={item.label}>{item.label}</span>
-                    ))}
+              {deptStats.map(([dep, count], idx) => (
+                <div key={dep} className="relative z-10 flex flex-col items-center gap-3 flex-1 group/bar">
+                  <div className="relative w-full max-w-[60px] flex items-end justify-center h-full">
+                    <div
+                      className="w-full rounded-t-xl bg-gradient-to-t from-indigo-600 to-indigo-400 shadow-lg shadow-indigo-200 transition-all duration-500 hover:to-purple-500"
+                      style={{
+                        height: `${(count / maxDeptCount) * 100}%`,
+                        minHeight: "40px",
+                      }}
+                    >
+                      <div className="opacity-0 group-hover/bar:opacity-100 absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg transition-opacity whitespace-nowrap z-20">
+                        {count} nhân viên
+                      </div>
+                    </div>
                   </div>
+                  <span className="text-xs font-medium text-slate-600 text-center w-full truncate px-1" title={dep}>
+                    {dep}
+                  </span>
                 </div>
-              </div>
-              <div className="mt-4 text-sm text-slate-500">
-                Hôm nay: <span className="font-semibold text-slate-800">{today}</span>
-              </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Hiring Trend */}
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col">
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-slate-900">Tăng trưởng</h3>
+            <p className="text-sm text-slate-500">Xu hướng tuyển dụng 6 tháng</p>
+          </div>
+
+          <div className="flex-1 relative min-h-[200px] bg-gradient-to-b from-indigo-50/50 to-white rounded-2xl border border-indigo-50 overflow-hidden">
+            {/* Simple SVG Chart */}
+            <svg className="absolute inset-0 w-full h-full p-4" viewBox="0 0 300 200" preserveAspectRatio="none">
+              <path
+                d="M0,150 C50,140 100,160 150,130 C200,100 250,80 300,50 L300,200 L0,200 Z"
+                fill="rgba(99, 102, 241, 0.1)"
+              />
+              <path
+                d="M0,150 C50,140 100,160 150,130 C200,100 250,80 300,50"
+                fill="none"
+                stroke="#6366f1"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+
+              {/* Dots */}
+              <circle cx="0" cy="150" r="3" fill="#6366f1" />
+              <circle cx="150" cy="130" r="3" fill="#6366f1" />
+              <circle cx="300" cy="50" r="3" fill="#6366f1" />
+            </svg>
+
+            <div className="absolute top-4 left-4 bg-white/80 backdrop-blur px-3 py-1.5 rounded-lg shadow-sm border border-indigo-100">
+              <p className="text-xs text-slate-500">Tháng này</p>
+              <p className="text-lg font-bold text-indigo-600">+12</p>
             </div>
           </div>
+
+          <div className="mt-4 flex items-center justify-between text-xs text-slate-400 px-2">
+            <span>Tháng 1</span>
+            <span>Tháng 6</span>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
 
