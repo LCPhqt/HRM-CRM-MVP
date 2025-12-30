@@ -244,7 +244,7 @@ function PayrollPage() {
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {[
-            { label: 'Tổng quan', icon: '🏠', path: '/home' },
+            { label: 'Tổng quan', icon: '📊', path: '/home' },
             { label: 'Nhân viên', icon: '👥', path: '/admin' },
             { label: 'Phòng ban', icon: '🏢', path: '/departments' },
             { label: 'Lương thưởng', icon: '💰', path: '/payroll' },

@@ -56,7 +56,7 @@ function DepartmentPage() {
   const items = useMemo(() => departments, [departments]);
 
   const navItems = [
-    { label: "Tổng quan", icon: "🏠", path: "/home" },
+    { label: "Tổng quan", icon: "📊", path: "/home" },
     { label: "Nhân viên", icon: "👥", path: "/admin" },
     { label: "Phòng ban", icon: "🏢", path: "/departments" },
     { label: "Lương thưởng", icon: "💰", path: "/payroll" },
