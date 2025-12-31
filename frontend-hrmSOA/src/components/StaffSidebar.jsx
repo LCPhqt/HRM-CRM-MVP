@@ -10,8 +10,9 @@ export default function StaffSidebar() {
  
   const menu = [
     { label: "Tổng quan", icon: "📊", path: "/home" },
-    { label: "Nhân viên", icon: "👥", path: "/staff/employees" },
-     { label: "Phòng ban", icon: "🏢", path: "/staff/departments" },
+    { label: "Hồ sơ", icon: "👥", path: "/staff/employees" },
+    { label: "Khách hàng", icon: "🤝", path: "/staff/customers" },
+    { label: "Phòng ban", icon: "🏢", path: "/staff/departments" },
   ];
 
   const isActive = (path) => {

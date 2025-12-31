@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import AdminSidebar from "../components/AdminSidebar";
+import StaffSidebar from "../components/StaffSidebar";
 
 function HomePage() {
-  const { user, role, logout, client } = useAuth();
+  const { user, role, client } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [employees, setEmployees] = useState([]); // admin only
   const [departments, setDepartments] = useState([]);
@@ -101,21 +102,6 @@ function HomePage() {
   const formatMoney = (v) =>
     Number(v || 0).toLocaleString("vi-VN", { minimumFractionDigits: 0 }) + " đ";
 
-  const navItems =
-    role === "admin"
-      ? [
-          { label: "Tổng quan", icon: "📊", path: "/home" },
-          { label: "Nhân viên", icon: "👥", path: "/admin" },
-          { label: "Phòng ban", icon: "🏢", path: "/departments" },
-          { label: "Lương thưởng", icon: "💰", path: "/payroll" },
-        ]
-      : [
-          { label: "Tổng quan", icon: "📊", path: "/home" },
-             { label: "Nhân viên", icon: "👥", path: "/staff/employees" },
-          { label: "Phòng ban", icon: "🏢", path: "/staff/departments" }, //  FIX
-       
-        ];
-
   const today = new Date().toLocaleDateString("vi-VN", {
     weekday: "long",
     day: "2-digit",
@@ -124,63 +110,7 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-slate-200 flex flex-col">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-          <div className="h-10 w-10 rounded-xl bg-indigo-500 flex items-center justify-center text-white font-bold">
-            HR
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-widest text-slate-400">
-              HRM Core
-            </p>
-            <p className="text-sm font-semibold">Enterprise SOA</p>
-          </div>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2">
-          {navItems.map((item) => {
-            const active = location.pathname.startsWith(item.path);
-            return (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  active
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                    : "hover:bg-slate-800"
-                }`}
-              >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="p-4 border-t border-slate-800">
-          <div className="flex items-center gap-3 bg-slate-800/80 px-3 py-2 rounded-lg">
-            <div className="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center text-white">
-              {user?.email?.[0]?.toUpperCase() || "A"}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">
-                {user?.email || "Đang trực tuyến"}
-              </p>
-              <p className="text-xs text-slate-400">
-                {role === "admin" ? "Quản trị viên" : "Nhân viên"}
-              </p>
-            </div>
-            <button
-              onClick={logout}
-              className="text-slate-400 hover:text-white text-lg"
-              title="Đăng xuất"
-            >
-              ↪
-            </button>
-          </div>
-        </div>
-      </aside>
+      {role === "admin" ? <AdminSidebar /> : <StaffSidebar />}
 
       {/* Main */}
       <main className="flex-1 bg-slate-50">
