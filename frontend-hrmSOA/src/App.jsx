@@ -7,6 +7,7 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/AdminPage";
 import PayrollPage from "./pages/PayrollPage";
+import CRMPage from "./pages/CRMPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DepartmentPage from "./pages/DepartmentPage";
 
@@ -14,6 +15,7 @@ import DepartmentPage from "./pages/DepartmentPage";
 import StaffProfilePage from "./pages/StaffProfilePage";
 import StaffDepartNhanVien from "./pages/StaffDepartNhanVien";
 import StaffEmployNhanvien from "./pages/StaffEmployNhanvien";
+import StaffCustomersPage from "./pages/StaffCustomersPage";
 
 function DepartmentGate() {
   const { role } = useAuth();
@@ -84,6 +86,15 @@ function AppShell() {
           }
         />
 
+        <Route
+          path="/staff/customers"
+          element={
+            <ProtectedRoute>
+              <StaffCustomersPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/*  admin departments */}
         <Route
           path="/departments"
@@ -108,6 +119,15 @@ function AppShell() {
           element={
             <ProtectedRoute role="admin">
               <PayrollPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/crm"
+          element={
+            <ProtectedRoute role="admin">
+              <CRMPage />
             </ProtectedRoute>
           }
         />
