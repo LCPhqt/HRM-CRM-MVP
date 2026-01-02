@@ -6,6 +6,7 @@ function CRMPage() {
   const { client, token, role } = useAuth();
 
   const [customers, setCustomers] = useState([]);
+  const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
@@ -180,8 +181,10 @@ function CRMPage() {
     try {
       const { data } = await client.get("/crm/customers", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
+        params: { page: 1, limit: 500 }, // tăng limit để tránh chỉ lấy 50 mặc định
       });
       setCustomers(data || []);
+      await fetchCustomerCount(); // luôn lấy count thật từ API (không dựa vào limit cắt)
     } catch (err) {
       console.error(err);
       setCustomers([]);
@@ -199,6 +202,17 @@ function CRMPage() {
     }
   };
 
+  const fetchCustomerCount = async () => {
+    try {
+      const { data } = await client.get("/crm/customers/count", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (typeof data?.count === "number") setCustomerCount(data.count);
+    } catch (err) {
+      // ignore, fallback to list length
+    }
+  };
+
   useEffect(() => {
     // Admin: load danh sách nhân viên để gán owner (tùy chọn)
     if (role === "admin" && token) {
@@ -213,6 +227,7 @@ function CRMPage() {
 
     if (!token) return;
     fetchCustomers();
+    fetchCustomerCount();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, role]);
 
@@ -280,6 +295,7 @@ function CRMPage() {
         ownerName: "",
       });
       await fetchCustomers();
+      await fetchCustomerCount();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || err.message || "Tạo khách hàng thất bại");
@@ -295,6 +311,7 @@ function CRMPage() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       await fetchCustomers();
+      await fetchCustomerCount();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || err.message || "Xóa khách hàng thất bại");
@@ -376,7 +393,9 @@ function CRMPage() {
           <div className="p-4 border-b border-slate-200 flex items-center justify-between">
             <div className="font-semibold text-slate-800">
               Danh sách khách hàng{" "}
-              <span className="text-slate-500 text-sm font-normal">({filtered.length})</span>
+              <span className="text-slate-500 text-sm font-normal">
+                ({customerCount || filtered.length})
+              </span>
             </div>
             {loading && <div className="text-sm text-slate-500">Đang tải...</div>}
           </div>
