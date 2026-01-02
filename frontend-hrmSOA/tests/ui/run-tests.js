@@ -66,7 +66,7 @@ async function testOpenRegistrationForm() {
 
   const fullNameInput = await driver.findElement(By.xpath("//input[@placeholder='Nguyễn Văn A']"));
   if (!(await fullNameInput.isDisplayed())) {
-    throw new Error('Full name input should be displayed in registration mode');
+    throw new Error('Fulll name input should be displayed in registration mode');
   }
 }
 
