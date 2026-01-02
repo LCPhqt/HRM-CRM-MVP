@@ -6,6 +6,7 @@ export default function StaffCustomersPage() {
   const { client, token } = useAuth();
 
   const [customers, setCustomers] = useState([]);
+  const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
@@ -43,8 +44,12 @@ export default function StaffCustomersPage() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await client.get("/crm/customers", { headers: authHeaders });
+      const { data } = await client.get("/crm/customers", {
+        headers: authHeaders,
+        params: { page: 1, limit: 500 },
+      });
       setCustomers(data || []);
+      await fetchCustomerCount(); // count thật từ API để không bị cắt bởi limit
     } catch (err) {
       console.error(err);
       setCustomers([]);
@@ -64,9 +69,21 @@ export default function StaffCustomersPage() {
     }
   };
 
+  const fetchCustomerCount = async () => {
+    try {
+      const { data } = await client.get("/crm/customers/count", {
+        headers: authHeaders,
+      });
+      if (typeof data?.count === "number") setCustomerCount(data.count);
+    } catch (err) {
+      // ignore, fallback to list length
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
     fetchCustomers();
+    fetchCustomerCount();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -117,6 +134,7 @@ export default function StaffCustomersPage() {
         tags: "",
       });
       await fetchCustomers();
+      await fetchCustomerCount();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || err.message || "Tạo khách hàng thất bại");
@@ -130,6 +148,7 @@ export default function StaffCustomersPage() {
     try {
       await client.delete(`/crm/customers/${id}`, { headers: authHeaders });
       await fetchCustomers();
+      await fetchCustomerCount();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || err.message || "Xóa khách hàng thất bại");
@@ -342,7 +361,9 @@ export default function StaffCustomersPage() {
           <div className="p-4 border-b border-slate-200 flex items-center justify-between">
             <div className="font-semibold text-slate-800">
               Danh sách{" "}
-              <span className="text-slate-500 text-sm font-normal">({filtered.length})</span>
+              <span className="text-slate-500 text-sm font-normal">
+                ({customerCount || filtered.length})
+              </span>
             </div>
             {loading && <div className="text-sm text-slate-500">Đang tải...</div>}
           </div>
