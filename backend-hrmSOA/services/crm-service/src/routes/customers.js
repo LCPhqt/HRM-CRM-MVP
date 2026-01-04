@@ -11,7 +11,10 @@ const {
   statsCustomers,
   listCustomerLogs,
   listDeletedCustomers,
-  restoreCustomer
+  restoreCustomer,
+  restoreMany,
+  deleteCustomerHard,
+  deleteManyHard
 } = require("../controllers/customerController");
 
 const router = express.Router();
@@ -24,7 +27,10 @@ router.get("/count", countCustomers);
 router.get("/stats", statsCustomers);
 router.get("/deleted", listDeletedCustomers);
 router.post("/import", importCustomers);
+router.post("/restore/bulk", restoreMany);
 router.post("/:id/restore", restoreCustomer);
+router.delete("/:id/hard", deleteCustomerHard);
+router.post("/hard/bulk", deleteManyHard);
 router.get("/:id/logs", listCustomerLogs);
 router.get("/:id", getCustomer);
 

@@ -124,6 +124,16 @@ async function deleteCustomer(id) {
   return normalize(deleted);
 }
 
+async function deleteCustomerHard(id) {
+  const deleted = await Customer.findByIdAndDelete(id).lean();
+  return normalize(deleted);
+}
+
+async function deleteCustomersHard(ids = []) {
+  const result = await Customer.deleteMany({ _id: { $in: ids } });
+  return result?.deletedCount || 0;
+}
+
 async function importCustomers(customers = []) {
   // customers: array of normalized payloads { name, email, phone, ... }
   const errors = [];
@@ -220,6 +230,8 @@ module.exports = {
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  deleteCustomerHard,
+  deleteCustomersHard,
   importCustomers,
   statusStats,
   listDeletedCustomers,

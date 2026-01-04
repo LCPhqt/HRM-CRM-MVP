@@ -95,15 +95,6 @@ function AppShell() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/staff/customers/history"
-          element={
-            <ProtectedRoute>
-              <CustomerHistoryPage />
-            </ProtectedRoute>
-          }
-        />
-
         {/*  admin departments */}
         <Route
           path="/departments"

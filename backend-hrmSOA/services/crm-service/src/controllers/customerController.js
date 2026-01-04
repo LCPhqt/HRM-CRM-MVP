@@ -237,20 +237,19 @@ async function importCustomers(req, res) {
 }
 
 async function listDeletedCustomers(req, res) {
+  if (!isAdmin(req)) return res.status(403).json({ message: "Forbidden" });
   const { page, limit } = req.query || {};
-  const ownerId = isAdmin(req) ? req.query?.ownerId : String(req.user?.id || "");
+  const ownerId = req.query?.ownerId;
   const items = await repo.listDeletedCustomers({ ownerId, page, limit });
   return res.json(items);
 }
 
 async function restoreCustomer(req, res) {
+  if (!isAdmin(req)) return res.status(403).json({ message: "Forbidden" });
   const { id } = req.params;
   const current = await repo.getCustomer(id);
   if (!current) return res.status(404).json({ message: "Không tìm thấy khách hàng" });
   if (!current.deleted) return res.status(400).json({ message: "Khách hàng chưa bị xóa" });
-  if (!isAdmin(req) && String(current.ownerId || "") !== String(req.user?.id || "")) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
 
   const restored = await repo.restoreCustomer(id);
   await logAuditSafe({
@@ -265,6 +264,113 @@ async function restoreCustomer(req, res) {
   return res.json(restored);
 }
 
+async function restoreMany(req, res) {
+  if (!isAdmin(req)) return res.status(403).json({ message: "Forbidden" });
+  const { ids } = req.body || {};
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: "Cần truyền mảng ids" });
+  }
+  const actorId = String(req.user?.id || "");
+  const actorEmail = req.user?.email || "";
+  const restored = [];
+  const skipped = [];
+  for (const rawId of ids) {
+    const id = String(rawId || "");
+    try {
+      const current = await repo.getCustomer(id);
+      if (!current || !current.deleted) {
+        skipped.push({ id, reason: "not_deleted_or_not_found" });
+        continue;
+      }
+      if (!isAdmin(req) && String(current.ownerId || "") !== actorId) {
+        skipped.push({ id, reason: "forbidden" });
+        continue;
+      }
+      const r = await repo.restoreCustomer(id);
+      restored.push(r);
+      await logAuditSafe({
+        customerId: String(id),
+        action: "restore",
+        actorId,
+        actorEmail,
+        before: current,
+        after: r,
+        success: true,
+      });
+    } catch (err) {
+      skipped.push({ id, reason: err?.message || "error" });
+    }
+  }
+  return res.json({ restoredCount: restored.length, restored, skippedCount: skipped.length, skipped });
+}
+
+async function deleteCustomerHard(req, res) {
+  if (!isAdmin(req)) return res.status(403).json({ message: "Forbidden" });
+  const { id } = req.params;
+  const current = await repo.getCustomer(id);
+  if (!current) return res.status(404).json({ message: "Không tìm thấy khách hàng" });
+  if (!current.deleted) return res.status(400).json({ message: "Khách hàng chưa bị xóa" });
+  const deleted = await repo.deleteCustomerHard(id);
+  await logAuditSafe({
+    customerId: String(id),
+    action: "hard_delete",
+    actorId: String(req.user?.id || ""),
+    actorEmail: req.user?.email || "",
+    before: current,
+    after: null,
+    success: true,
+  });
+  return res.json({ message: "Đã xóa vĩnh viễn", deleted });
+}
+
+async function deleteManyHard(req, res) {
+  if (!isAdmin(req)) return res.status(403).json({ message: "Forbidden" });
+  const { ids } = req.body || {};
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: "Cần truyền mảng ids" });
+  }
+  const actorId = String(req.user?.id || "");
+  const actorEmail = req.user?.email || "";
+  const okIds = [];
+  const skipped = [];
+
+  for (const rawId of ids) {
+    const id = String(rawId || "");
+    try {
+      const current = await repo.getCustomer(id);
+      if (!current || !current.deleted) {
+        skipped.push({ id, reason: "not_deleted_or_not_found" });
+        continue;
+      }
+      if (!isAdmin(req) && String(current.ownerId || "") !== actorId) {
+        skipped.push({ id, reason: "forbidden" });
+        continue;
+      }
+      okIds.push(id);
+    } catch (err) {
+      skipped.push({ id, reason: err?.message || "error" });
+    }
+  }
+
+  let deletedCount = 0;
+  if (okIds.length > 0) {
+    deletedCount = await repo.deleteCustomersHard(okIds);
+    for (const id of okIds) {
+      await logAuditSafe({
+        customerId: String(id),
+        action: "hard_delete",
+        actorId,
+        actorEmail,
+        before: null,
+        after: null,
+        success: true,
+      });
+    }
+  }
+
+  return res.json({ deletedCount, skippedCount: skipped.length, skipped });
+}
+
 module.exports = {
   listCustomers,
   countCustomers,
@@ -276,7 +382,10 @@ module.exports = {
   statsCustomers,
   listCustomerLogs,
   listDeletedCustomers,
-  restoreCustomer
+  restoreCustomer,
+  restoreMany,
+  deleteCustomerHard,
+  deleteManyHard
 };
 
 
