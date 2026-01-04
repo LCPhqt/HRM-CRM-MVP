@@ -7,7 +7,8 @@ const {
   createCustomer,
   updateCustomer,
   deleteCustomer,
-  importCustomers
+  importCustomers,
+  statsCustomers
 } = require("../controllers/customerController");
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.use(requireAuth);
 // Read: staff + admin
 router.get("/", listCustomers);
 router.get("/count", countCustomers);
+router.get("/stats", statsCustomers);
 router.post("/import", importCustomers);
 router.get("/:id", getCustomer);
 

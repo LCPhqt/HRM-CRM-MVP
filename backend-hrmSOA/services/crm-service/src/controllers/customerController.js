@@ -25,6 +25,21 @@ async function countCustomers(req, res) {
   return res.json({ count });
 }
 
+async function statsCustomers(req, res) {
+  const { ownerId } = req.query || {};
+  const effectiveOwnerId = isAdmin(req) ? ownerId : String(req.user?.id || "");
+  const stats = await repo.statusStats({ ownerId: effectiveOwnerId });
+  const total = Math.max(0, Number(stats.total || 0));
+  const pct = (v) => (total === 0 ? 0 : Number(((v / total) * 100).toFixed(1)));
+  return res.json({
+    ...stats,
+    activePercent: pct(stats.active),
+    leadPercent: pct(stats.lead),
+    inactivePercent: pct(stats.inactive),
+    otherPercent: pct(stats.other),
+  });
+}
+
 async function getCustomer(req, res) {
   const customer = await repo.getCustomer(req.params.id);
   if (!customer) return res.status(404).json({ message: "Không tìm thấy khách hàng" });
@@ -148,7 +163,8 @@ module.exports = {
   createCustomer,
   updateCustomer,
   deleteCustomer,
-  importCustomers
+  importCustomers,
+  statsCustomers
 };
 
 

@@ -39,6 +39,33 @@ async function countCustomers({ search, status, ownerId } = {}) {
   return Customer.countDocuments(q);
 }
 
+async function statusStats({ ownerId } = {}) {
+  const match = {};
+  if (ownerId) match.ownerId = ownerId;
+
+  const raw = await Customer.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: { $toLower: { $ifNull: ["$status", ""] } },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const stats = { total: 0, active: 0, lead: 0, inactive: 0, other: 0 };
+  for (const row of raw) {
+    const key = String(row?._id || "").trim().toLowerCase();
+    const c = Number(row?.count || 0);
+    stats.total += c;
+    if (key === "inactive" || key.includes("ngung")) stats.inactive += c;
+    else if (key === "active" || key.includes("hoat dong")) stats.active += c;
+    else if (key === "lead" || key.includes("tiem nang")) stats.lead += c;
+    else stats.other += c;
+  }
+  return stats;
+}
+
 async function getCustomer(id) {
   const doc = await Customer.findById(id).lean();
   return normalize(doc);
@@ -166,7 +193,8 @@ module.exports = {
   createCustomer,
   updateCustomer,
   deleteCustomer,
-  importCustomers
+  importCustomers,
+  statusStats,
 };
 
 

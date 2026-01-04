@@ -12,6 +12,13 @@ function HomePage() {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [customerCount, setCustomerCount] = useState(0);
+  const [customerStats, setCustomerStats] = useState({
+    total: 0,
+    active: 0,
+    lead: 0,
+    inactive: 0,
+    other: 0,
+  });
 
   //  routes theo role
   const employeesPath = role === "admin" ? "/admin" : "/staff/employees";
@@ -33,15 +40,46 @@ function HomePage() {
           setEmployees([]); // staff không dùng list này
         }
 
-        //  CRM: tổng khách hàng (best-effort, không làm crash trang nếu CRM chưa chạy)
+        //  CRM: thống kê trạng thái (role-sensitive, staff chỉ thấy của mình)
         try {
-          const crmRes = await client.get("/crm/customers/count", {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+          const statsRes = await client.get("/crm/customers/stats", { headers: authHeaders });
+          const stats = statsRes.data || {};
+
+          // fallback tính lại từ danh sách (tối đa 500) để bảo đảm khớp hiển thị
+          const listRes = await client.get("/crm/customers", {
+            params: { page: 1, limit: 500 },
+            headers: authHeaders,
           });
-          const count = Number(crmRes.data?.count ?? 0);
-          setCustomerCount(Number.isFinite(count) ? count : 0);
+          const items = Array.isArray(listRes.data) ? listRes.data : [];
+          const recompute = (arr) =>
+            arr.reduce(
+              (acc, c) => {
+                const status = String(c?.status || "").trim().toLowerCase();
+                if (status === "inactive" || status.includes("ngung")) acc.inactive += 1;
+                else if (status === "active" || status.includes("đang hoạt động")) acc.active += 1;
+                else if (status === "lead" || status.includes("tiềm năng")) acc.lead += 1;
+                else acc.other += 1;
+                acc.total += 1;
+                return acc;
+              },
+              { total: 0, active: 0, lead: 0, inactive: 0, other: 0 }
+            );
+
+          const fallbackStats = recompute(items);
+          const normalized = {
+            total: Number(fallbackStats.total || stats.total || 0),
+            active: Number(fallbackStats.active || stats.active || 0),
+            lead: Number(fallbackStats.lead || stats.lead || 0),
+            inactive: Number(fallbackStats.inactive || stats.inactive || 0),
+            other: Number(fallbackStats.other || stats.other || 0),
+          };
+
+          setCustomerStats(normalized);
+          setCustomerCount(normalized.total);
         } catch (err) {
-          console.warn("Cannot load customer count", err?.response?.data || err?.message || err);
+          console.warn("Cannot load customer stats", err?.response?.data || err?.message || err);
+          setCustomerStats({ total: 0, active: 0, lead: 0, inactive: 0, other: 0 });
           setCustomerCount(0);
         }
       } catch (err) {
@@ -49,6 +87,7 @@ function HomePage() {
         setEmployees([]);
         setDepartments([]);
         setCustomerCount(0);
+        setCustomerStats({ total: 0, active: 0, lead: 0, inactive: 0, other: 0 });
       } finally {
         setLoading(false);
       }
@@ -125,6 +164,40 @@ function HomePage() {
     day: "2-digit",
     month: "long",
   });
+
+  //  Chuẩn bị dữ liệu biểu đồ trạng thái
+  const statusSegmentsAll = useMemo(() => {
+    const total = Math.max(1, customerStats.total);
+    const mk = (label, value, color) => ({
+      label,
+      value,
+      color,
+      percent: Math.round((value / total) * 100),
+    });
+    return [
+      mk("Active", customerStats.active, "#10b981"),
+      mk("Lead", customerStats.lead, "#f59e0b"),
+      mk("Inactive", customerStats.inactive, "#94a3b8"),
+      mk("Khác", customerStats.other, "#8b5cf6"),
+    ];
+  }, [customerStats]);
+
+  //  Vẽ chart chỉ với segment > 0 để tránh stroke 0 length
+  const statusSegmentsChart = useMemo(
+    () => statusSegmentsAll.filter((s) => s.value > 0),
+    [statusSegmentsAll]
+  );
+
+  const circumference = 2 * Math.PI * 60; // r=60 giống biểu đồ admin
+  const cumulativeDash = (segments) => {
+    let offset = 0;
+    return segments.map((s) => {
+      const length = (s.percent / 100) * circumference;
+      const current = { ...s, length, offset };
+      offset -= length;
+      return current;
+    });
+  };
 
   return (
     <div className="h-screen bg-white text-slate-900 flex overflow-hidden">
@@ -232,7 +305,7 @@ function HomePage() {
             </div>
           </div>
 
-          {/* Biểu đồ - Chỉ Admin */}
+          {/* Biểu đồ - Admin */}
           {role === "admin" && (
             <div className="grid gap-6 xl:grid-cols-2">
               {/* Biểu đồ phân bổ nhân viên theo phòng ban */}
@@ -285,7 +358,7 @@ function HomePage() {
                 )}
               </div>
 
-              {/* Biểu đồ tròn thống kê khách hàng */}
+              {/* Biểu đồ tròn thống kê khách hàng (theo dữ liệu thực tế) */}
               <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -305,7 +378,6 @@ function HomePage() {
                   {/* Pie Chart SVG */}
                   <div className="relative">
                     <svg width="160" height="160" viewBox="0 0 160 160">
-                      {/* Background circle */}
                       <circle
                         cx="80"
                         cy="80"
@@ -314,46 +386,23 @@ function HomePage() {
                         stroke="#e2e8f0"
                         strokeWidth="24"
                       />
-                      {/* Active segment (green) - 40% */}
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="60"
-                        fill="none"
-                        stroke="#10b981"
-                        strokeWidth="24"
-                        strokeDasharray="150.8 226.2"
-                        strokeDashoffset="0"
-                        transform="rotate(-90 80 80)"
-                        className="transition-all duration-500"
-                      />
-                      {/* Lead segment (amber) - 35% */}
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="60"
-                        fill="none"
-                        stroke="#f59e0b"
-                        strokeWidth="24"
-                        strokeDasharray="131.95 245.05"
-                        strokeDashoffset="-150.8"
-                        transform="rotate(-90 80 80)"
-                        className="transition-all duration-500"
-                      />
-                      {/* Inactive segment (gray) - 25% */}
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="60"
-                        fill="none"
-                        stroke="#94a3b8"
-                        strokeWidth="24"
-                        strokeDasharray="94.25 282.75"
-                        strokeDashoffset="-282.75"
-                        transform="rotate(-90 80 80)"
-                        className="transition-all duration-500"
-                      />
-                      {/* Center text */}
+                      {statusSegmentsChart.length > 0 ? (
+                        cumulativeDash(statusSegmentsChart).map((seg, idx) => (
+                          <circle
+                            key={seg.label + idx}
+                            cx="80"
+                            cy="80"
+                            r="60"
+                            fill="none"
+                            stroke={seg.color}
+                            strokeWidth="24"
+                            strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                            strokeDashoffset={seg.offset}
+                            transform="rotate(-90 80 80)"
+                            className="transition-all duration-500"
+                          />
+                        ))
+                      ) : null}
                       <text
                         x="80"
                         y="75"
@@ -361,7 +410,7 @@ function HomePage() {
                         className="fill-purple-600 text-2xl font-bold"
                         style={{ fontSize: "28px", fontWeight: "700" }}
                       >
-                        {formatCount(customerCount)}
+                        {formatCount(customerStats.total)}
                       </text>
                       <text
                         x="80"
@@ -377,27 +426,23 @@ function HomePage() {
 
                   {/* Legend */}
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-emerald-500"></div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-700">Active</p>
-                        <p className="text-xs text-slate-500">40%</p>
+                    {statusSegmentsAll.every((s) => s.value === 0) && (
+                      <p className="text-sm text-slate-500">Chưa có dữ liệu.</p>
+                    )}
+                    {statusSegmentsAll.map((seg) => (
+                      <div key={seg.label} className="flex items-center gap-2">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: seg.color }}
+                        ></div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-700">{seg.label}</p>
+                          <p className="text-xs text-slate-500">
+                            {formatCount(seg.value)} · {seg.percent}%
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-amber-500"></div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-700">Lead</p>
-                        <p className="text-xs text-slate-500">35%</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-slate-400"></div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-700">Inactive</p>
-                        <p className="text-xs text-slate-500">25%</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
                 <div className="mt-4 text-sm text-slate-500">
@@ -407,12 +452,97 @@ function HomePage() {
             </div>
           )}
 
-          {/* Footer cho Staff */}
+          {/* Biểu đồ - Staff: thống kê khách hàng của riêng họ */}
           {role !== "admin" && (
-            <div className="mt-4 text-sm text-slate-500">
-              Hôm nay: <span className="font-semibold text-slate-800">{today}</span>
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm text-purple-500">Thống kê CRM</p>
+                  <h3 className="text-xl font-bold text-slate-900">Tổng quan khách hàng</h3>
+                </div>
+                <span
+                  className="text-sm text-purple-600 cursor-pointer flex items-center gap-1 hover:underline"
+                  onClick={() => navigate(customersPath)}
+                >
+                  Xem chi tiết <span className="text-base">↗</span>
+                </span>
+              </div>
+
+              <div className="relative h-64 bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-2xl p-4 flex items-center justify-center gap-6">
+                <div className="relative">
+                  <svg width="160" height="160" viewBox="0 0 160 160">
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="60"
+                      fill="none"
+                      stroke="#e2e8f0"
+                      strokeWidth="24"
+                    />
+                    {statusSegmentsChart.length > 0
+                      ? cumulativeDash(statusSegmentsChart).map((seg, idx) => (
+                          <circle
+                            key={seg.label + idx}
+                            cx="80"
+                            cy="80"
+                            r="60"
+                            fill="none"
+                            stroke={seg.color}
+                            strokeWidth="24"
+                            strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                            strokeDashoffset={seg.offset}
+                            transform="rotate(-90 80 80)"
+                            className="transition-all duration-500"
+                          />
+                        ))
+                      : null}
+                    <text
+                      x="80"
+                      y="75"
+                      textAnchor="middle"
+                      className="fill-purple-600 text-2xl font-bold"
+                      style={{ fontSize: "28px", fontWeight: "700" }}
+                    >
+                      {formatCount(customerStats.total)}
+                    </text>
+                    <text
+                      x="80"
+                      y="95"
+                      textAnchor="middle"
+                      className="fill-slate-500 text-xs"
+                      style={{ fontSize: "11px" }}
+                    >
+                      Khách hàng
+                    </text>
+                  </svg>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                    {statusSegmentsAll.every((s) => s.value === 0) && (
+                    <p className="text-sm text-slate-500">Chưa có dữ liệu.</p>
+                  )}
+                  {statusSegmentsAll.map((seg) => (
+                    <div key={seg.label} className="flex items-center gap-2">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: seg.color }}
+                      ></div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">{seg.label}</p>
+                        <p className="text-xs text-slate-500">
+                          {formatCount(seg.value)} · {seg.percent}%
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 text-sm text-slate-500">
+                Hôm nay: <span className="font-semibold text-slate-800">{today}</span>
+              </div>
             </div>
           )}
+
         </div>
       </main>
     </div>
