@@ -9,9 +9,15 @@ Dự án này có 2 loại tests:
 ### Backend Unit Tests
 
 ```bash
-cd backend-hrmSOA/services/identity-service
+cd test-hrmSOA/backend/identity-service
 npm install
 npm test
+```
+
+Hoặc từ root:
+```bash
+cd test-hrmSOA
+npm run test:backend
 ```
 
 **Test Cases:**
@@ -25,16 +31,21 @@ npm test
 ### Frontend UI Tests
 
 ```bash
+# 1. Khởi động frontend server (từ frontend-hrmSOA)
 cd frontend-hrmSOA
-
-# 1. Khởi động server
 npm run dev
 # Hoặc
 npm run build && npm run preview
 
-# 2. Chạy tests (terminal khác)
-npm install
-npm run test:ui
+# 2. Chạy tests (terminal khác, từ test-hrmSOA)
+cd test-hrmSOA
+npm run test:frontend
+```
+
+Hoặc từ frontend folder:
+```bash
+cd frontend-hrmSOA
+npm run test:ui  # Sẽ tự động trỏ đến test-hrmSOA
 ```
 
 **Test Cases:**

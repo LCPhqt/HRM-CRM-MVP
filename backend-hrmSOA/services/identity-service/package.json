@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "jest --coverage",
+    "test": "cd ../../../test-hrmSOA/backend/identity-service && npm test",
+    "test:local": "jest --coverage",
     "test:watch": "jest --watch"
   },
   "dependencies": {

@@ -1,0 +1,22 @@
+{
+  "name": "test-hrmSOA",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Centralized tests for HRM SOA project",
+  "scripts": {
+    "test:backend": "cd backend/identity-service && npm test",
+    "test:frontend": "node frontend/ui/run-tests.js",
+    "test:all": "npm run test:backend && npm run test:frontend",
+    "install:backend": "cd backend/identity-service && npm install",
+    "install:frontend": "cd ../../frontend-hrmSOA && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "@types/jest": "^29.5.11",
+    "selenium-webdriver": "^4.15.0",
+    "chromedriver": "^119.0.0"
+  }
+}
+

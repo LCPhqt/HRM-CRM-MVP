@@ -1,0 +1,15 @@
+{
+  "name": "identity-service-tests",
+  "version": "1.0.0",
+  "description": "Tests for identity service",
+  "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "@types/jest": "^29.5.11"
+  }
+}
+

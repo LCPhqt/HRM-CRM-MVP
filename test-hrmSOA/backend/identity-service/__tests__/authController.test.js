@@ -1,9 +1,8 @@
 const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
-const { connectAndSeed } = require('../src/config/db');
-const authRoutes = require('../src/routes/auth');
-const User = require('../src/models/User');
+const authRoutes = require('../../../../backend-hrmSOA/services/identity-service/src/routes/auth');
+const User = require('../../../../backend-hrmSOA/services/identity-service/src/models/User');
 const bcrypt = require('bcryptjs');
 
 // Create test app
