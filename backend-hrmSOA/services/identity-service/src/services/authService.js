@@ -34,13 +34,13 @@ async function register(email, password, fullName) {
 async function login(email, password) {
   const user = await userRepo.findByEmail(email);
   if (!user) {
-    const error = new Error('Invalid credentials');
+    const error = new Error('Sai mật khẩu hoặc tài khoản');
     error.status = 401;
     throw error;
   }
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) {
-    const error = new Error('Invalid credentials');
+    const error = new Error('Sai mật khẩu hoặc tài khoản');
     error.status = 401;
     throw error;
   }
