@@ -2,6 +2,7 @@ const path = require('path');
 
 module.exports = {
   testEnvironment: 'node',
+  testTimeout: 30000,
   coveragePathIgnorePatterns: ['/node_modules/', '/tests/', '/__tests__/'],
   testMatch: ['**/__tests__/**/*.test.js'],
   collectCoverageFrom: [

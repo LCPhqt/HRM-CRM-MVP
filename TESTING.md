@@ -48,7 +48,7 @@ cd frontend-hrmSOA
 npm run test:ui  # Sẽ tự động trỏ đến test-hrmSOA
 ```
 
-**Test Cases:**
+**Test Cases - Login/Register:**
 - ✅ Mở trang đăng ký tại URL đúng
 - ✅ Điền form đăng ký và submit
 - ✅ Sau khi đăng ký → chuyển sang đăng nhập
@@ -56,6 +56,13 @@ npm run test:ui  # Sẽ tự động trỏ đến test-hrmSOA
 - ✅ Sau khi login thành công → điều hướng tới trang đúng
 - ✅ Không hiển thị thông báo lỗi sau khi login thành công
 - ✅ Hiển thị lỗi khi đăng nhập sai credentials
+
+**Test Cases - Admin Search & Filter:**
+- ✅ Tìm kiếm theo tên nhân viên
+- ✅ Tìm kiếm theo email
+- ✅ Filter theo trạng thái (all, working, leave, quit)
+- ✅ Kết hợp search + filter
+- ✅ Hiển thị thông báo khi không có kết quả
 
 ## 📋 Yêu cầu
 

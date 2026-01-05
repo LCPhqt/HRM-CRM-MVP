@@ -1,28 +1,68 @@
 const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
-const authRoutes = require('../../../../backend-hrmSOA/services/identity-service/src/routes/auth');
-const User = require('../../../../backend-hrmSOA/services/identity-service/src/models/User');
 const bcrypt = require('bcryptjs');
 
-// Create test app
-const app = express();
-app.use(express.json());
-app.use('/auth', authRoutes);
+// Set JWT_SECRET for tests BEFORE loading routes
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test_secret';
+process.env.PROFILE_SERVICE_URL = process.env.PROFILE_SERVICE_URL || 'http://localhost:5002';
+
+// Variables to hold routes and models (loaded after connection)
+let authRoutes;
+let User;
+let app;
+
+// Wait for mongoose connection before loading models
+// This ensures User model uses the connected mongoose instance
+beforeAll(async () => {
+  // Wait for connection to be ready (setup.js handles connection)
+  let attempts = 0;
+  while (mongoose.connection.readyState !== 1 && attempts < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+  if (mongoose.connection.readyState !== 1) {
+    throw new Error('MongoDB connection not ready');
+  }
+  
+  // Verify connection is actually working by trying a simple operation
+  try {
+    await mongoose.connection.db.admin().ping();
+  } catch (error) {
+    throw new Error(`MongoDB connection verification failed: ${error.message}`);
+  }
+  
+  // Wait a bit more to ensure connection is fully established and mongoose is ready
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Now load routes and models after connection is ready and verified
+  // Note: Even though mongoose is connected, models might still buffer if they were
+  // created before connection. We load them here to minimize this issue.
+  authRoutes = require('../../../../backend-hrmSOA/services/identity-service/src/routes/auth');
+  User = require('../../../../backend-hrmSOA/services/identity-service/src/models/User');
+  
+  // Verify mongoose connection is still ready
+  if (mongoose.connection.readyState !== 1) {
+    throw new Error('Mongoose connection not ready after loading models');
+  }
+  
+  // Create test app
+  app = express();
+  app.use(express.json());
+  app.use('/auth', authRoutes);
+}, 30000);
 
 describe('Registration API Tests', () => {
-  beforeAll(async () => {
-    const uri = process.env.TEST_MONGO_URI || 'mongodb://127.0.0.1:27017/hrm_identity_test';
-    await mongoose.connect(uri);
-  });
-
+  // MongoDB connection is handled by setup.js, no need to duplicate here
+  // Just ensure cleanup after each test
   afterEach(async () => {
-    await User.deleteMany({});
-  });
-
-  afterAll(async () => {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await User.deleteMany({});
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    }
   });
 
   describe('POST /auth/register', () => {
@@ -36,6 +76,10 @@ describe('Registration API Tests', () => {
           full_name: 'Test User'
         });
 
+      if (response.status !== 201) {
+        console.error('Response status:', response.status);
+        console.error('Response body:', JSON.stringify(response.body, null, 2));
+      }
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('accessToken');
       expect(response.body).toHaveProperty('role', 'staff');
