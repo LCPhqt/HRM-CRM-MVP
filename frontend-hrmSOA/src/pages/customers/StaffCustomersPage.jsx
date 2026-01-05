@@ -10,6 +10,7 @@ export default function StaffCustomersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [adding, setAdding] = useState(false);
   const [addForm, setAddForm] = useState({
@@ -233,14 +234,24 @@ export default function StaffCustomersPage() {
   }, [token]);
 
   const filtered = useMemo(() => {
-    const list = [...customers];
-    if (!filter) return list;
-    const q = filter.toLowerCase();
-    return list.filter((c) => {
-      const text = `${c.name || ""} ${c.cccd || ""} ${c.email || ""} ${c.phone || ""} ${c.address || ""}`.toLowerCase();
-      return text.includes(q);
-    });
-  }, [customers, filter]);
+    let list = [...customers];
+
+    // Filter by status
+    if (statusFilter && statusFilter !== "all") {
+      list = list.filter((c) => (c.status || "lead") === statusFilter);
+    }
+
+    // Filter by search text
+    if (filter) {
+      const q = filter.toLowerCase();
+      list = list.filter((c) => {
+        const text = `${c.name || ""} ${c.cccd || ""} ${c.email || ""} ${c.phone || ""} ${c.address || ""}`.toLowerCase();
+        return text.includes(q);
+      });
+    }
+
+    return list;
+  }, [customers, filter, statusFilter]);
 
   const handleCreate = async () => {
     if (!addForm.name.trim()) {
@@ -569,6 +580,17 @@ export default function StaffCustomersPage() {
               className="w-full outline-none text-sm text-slate-700"
             />
           </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 shadow-sm hover:border-indigo-200 cursor-pointer"
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="lead">Lead</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
 
           <button
             onClick={fetchCustomers}

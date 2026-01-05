@@ -10,6 +10,7 @@ function CRMPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [importing, setImporting] = useState(false);
   const [importModal, setImportModal] = useState(false);
   const [importPreview, setImportPreview] = useState([]);
@@ -372,30 +373,40 @@ function CRMPage() {
   }, [token, role]);
 
   const filtered = useMemo(() => {
-    const list = [...customers];
-    if (!filter) return list;
-    const q = filter.toLowerCase();
-    return list.filter((c) => {
-      const ownerId = c.ownerId || c.owner_id || c.owner || "";
-      const ownerText = (() => {
-        const emp = employees.find(
-          (e) => String(e.id || e.userId || e._id || "") === String(ownerId)
-        );
-        const profile = emp?.profile || {};
-        return (
-          emp?.full_name ||
-          emp?.fullName ||
-          profile.full_name ||
-          profile.fullName ||
-          emp?.email ||
-          profile.email ||
-          ""
-        ).toLowerCase();
-      })();
-      const text = `${c.name || ""} ${c.cccd || ""} ${c.email || ""} ${c.phone || ""} ${c.address || ""} ${ownerText}`.toLowerCase();
-      return text.includes(q);
-    });
-  }, [customers, filter, employees]);
+    let list = [...customers];
+
+    // Filter by status
+    if (statusFilter && statusFilter !== "all") {
+      list = list.filter((c) => (c.status || "lead") === statusFilter);
+    }
+
+    // Filter by search text
+    if (filter) {
+      const q = filter.toLowerCase();
+      list = list.filter((c) => {
+        const ownerId = c.ownerId || c.owner_id || c.owner || "";
+        const ownerText = (() => {
+          const emp = employees.find(
+            (e) => String(e.id || e.userId || e._id || "") === String(ownerId)
+          );
+          const profile = emp?.profile || {};
+          return (
+            emp?.full_name ||
+            emp?.fullName ||
+            profile.full_name ||
+            profile.fullName ||
+            emp?.email ||
+            profile.email ||
+            ""
+          ).toLowerCase();
+        })();
+        const text = `${c.name || ""} ${c.cccd || ""} ${c.email || ""} ${c.phone || ""} ${c.address || ""} ${ownerText}`.toLowerCase();
+        return text.includes(q);
+      });
+    }
+
+    return list;
+  }, [customers, filter, statusFilter, employees]);
 
   const handleCreate = async () => {
     if (!addForm.name.trim()) {
@@ -620,6 +631,17 @@ function CRMPage() {
               className="w-full outline-none text-sm text-slate-700"
             />
           </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 shadow-sm hover:border-indigo-200 cursor-pointer"
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="lead">Lead</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
 
           <button
             onClick={fetchCustomers}
