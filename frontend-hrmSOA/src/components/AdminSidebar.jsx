@@ -17,7 +17,13 @@ export default function AdminSidebar() {
     { label: "Lương thưởng", icon: "💰", path: "/payroll" },
   ];
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const isActive = (path) => {
+    if (path === "/crm") {
+      // Chỉ sáng mục "Khách hàng" khi đúng trang /crm (không sáng khi đang ở /crm/history)
+      return location.pathname === "/crm";
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <aside className="w-64 bg-slate-900 text-slate-200 flex flex-col sticky top-0 h-screen">
