@@ -77,4 +77,4 @@ jobs:
           TEST_BASE_URL: http://localhost:4173
           HEADLESS: 'true'
           TEST_USER_EMAIL: admin@gmail.com
-          TEST_USER_PASSWORD: admin123
+          TEST_USER_PASSWORD: admin123  

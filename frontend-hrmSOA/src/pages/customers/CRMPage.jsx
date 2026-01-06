@@ -332,6 +332,12 @@ function CRMPage() {
   };
 
   const exportToExcel = async () => {
+    // Kiểm tra danh sách rỗng trước khi export
+    if (!customers || customers.length === 0) {
+      alert("Danh sách khách hàng đang trống. Vui lòng thêm khách hàng trước khi xuất file.");
+      return;
+    }
+
     try {
       const xlsx = await import("xlsx");
       const rows = (customers || []).map((c, idx) => ({

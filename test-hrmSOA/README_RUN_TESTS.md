@@ -19,6 +19,9 @@ cd C:\Users\OS\Duan-tLam\test-hrmSOA
 # Chỉ Admin Search & Filter Tests
 .\start-services-and-test.ps1 admin
 
+# Chỉ Navigation Tests
+.\start-services-and-test.ps1 navigation
+
 # Tất cả UI Tests
 .\start-services-and-test.ps1 all-ui
 ```
@@ -69,6 +72,7 @@ npm test
 cd C:\Users\OS\Duan-tLam\test-hrmSOA
 npm run test:frontend    # Login/Register
 npm run test:admin       # Admin Search & Filter
+npm run test:navigation  # Navigation tests
 npm run test:all-ui      # Tất cả UI tests
 ```
 
