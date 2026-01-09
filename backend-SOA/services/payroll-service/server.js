@@ -4,6 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const connectDb = require('./src/config/db');
 const payrollRoutes = require('./src/routes/payroll');
+const { setupSwagger } = require('./swagger');
 
 const PORT = process.env.PORT || 5004;
 
@@ -13,6 +14,10 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'payroll' }));
+
+// Swagger UI
+setupSwagger(app);
+
 app.use('/payroll', payrollRoutes);
 
 app.use((err, _req, res, _next) => {

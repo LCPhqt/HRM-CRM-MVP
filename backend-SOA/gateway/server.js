@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const { setupSwagger } = require('./swagger');
 
 const {
   PORT = 4000,
@@ -36,6 +37,9 @@ const proxyWithBody = (target) =>
   });
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'gateway' }));
+
+// Swagger UI Documentation
+setupSwagger(app);
 
 app.use('/auth', proxyWithBody(IDENTITY_SERVICE_URL));
 app.use('/users', proxyWithBody(IDENTITY_SERVICE_URL));

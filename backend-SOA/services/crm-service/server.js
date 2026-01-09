@@ -4,6 +4,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const connectDb = require("./src/config/db");
 const customersRouter = require("./src/routes/customers");
+const { setupSwagger } = require("./swagger");
 
 // Lưu ý Windows: `localhost` đôi khi resolve sang IPv6 (::1) trong khi Mongo chỉ listen IPv4.
 // Dùng 127.0.0.1 mặc định để tránh ECONNREFUSED ::1:27017.
@@ -15,6 +16,9 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "crm-service" }));
+
+// Swagger UI
+setupSwagger(app);
 
 let dbReady = false;
 // Nếu DB chưa sẵn sàng, trả 503 thay vì để gateway timeout/ECONNREFUSED khó debug

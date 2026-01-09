@@ -6,9 +6,9 @@ module.exports = {
   coveragePathIgnorePatterns: ['/node_modules/', '/tests/', '/__tests__/'],
   testMatch: ['**/__tests__/**/*.test.js'],
   collectCoverageFrom: [
-    '../../backend-hrmSOA/services/identity-service/src/**/*.js',
-    '!../../backend-hrmSOA/services/identity-service/src/config/**',
-    '!../../backend-hrmSOA/services/identity-service/server.js'
+    '../../backend-SOA/services/identity-service/src/**/*.js',
+    '!../../backend-SOA/services/identity-service/src/config/**',
+    '!../../backend-SOA/services/identity-service/server.js'
   ],
   setupFilesAfterEnv: ['<rootDir>/setup.js'],
   // Add root directory to module resolution
@@ -16,7 +16,7 @@ module.exports = {
   roots: ['<rootDir>'],
   // Map module paths
   moduleNameMapper: {
-    '^../src/(.*)$': path.resolve(__dirname, '../../backend-hrmSOA/services/identity-service/src/$1')
+    '^../src/(.*)$': path.resolve(__dirname, '../../backend-SOA/services/identity-service/src/$1')
   }
 };
 

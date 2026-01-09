@@ -4,6 +4,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const connectDb = require("./src/config/db");
 const departmentsRouter = require("./src/routes/departments");
+const { setupSwagger } = require("./swagger");
 
 const {
   PORT = 5006,
@@ -16,6 +17,9 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "department-service" }));
+
+// Swagger UI
+setupSwagger(app);
 
 app.use("/departments", departmentsRouter);
 

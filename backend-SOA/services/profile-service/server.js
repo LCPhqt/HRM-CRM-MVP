@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const { connect } = require('./src/config/db');
 const profileRoutes = require('./src/routes/profiles');
+const { setupSwagger } = require('./swagger');
 
 const PORT = process.env.PORT || 5002;
 
@@ -14,6 +15,9 @@ async function start() {
   app.use(express.json());
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'profile' }));
+
+  // Swagger UI
+  setupSwagger(app);
 
   app.use('/profiles', profileRoutes);
 

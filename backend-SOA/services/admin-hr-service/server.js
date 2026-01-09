@@ -2,6 +2,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const adminRoutes = require('./src/routes/admin');
+const { setupSwagger } = require('./swagger');
 
 const PORT = process.env.PORT || 5003;
 
@@ -10,6 +11,9 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'admin-hr' }));
+
+// Swagger UI
+setupSwagger(app);
 
 app.use('/admin', adminRoutes);
 

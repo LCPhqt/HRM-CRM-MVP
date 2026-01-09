@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+// Align with identity-service's mongoose instance to share models/connection.
+const mongoose = require('../../../backend-SOA/services/identity-service/node_modules/mongoose');
 
 // Setup test database connection
 beforeAll(async () => {

@@ -14,7 +14,9 @@
     "http-status": "^1.6.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

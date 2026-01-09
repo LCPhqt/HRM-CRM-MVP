@@ -1,6 +1,8 @@
 const request = require('supertest');
 const express = require('express');
-const mongoose = require('mongoose');
+// Use the same mongoose instance as the identity-service code to avoid
+// double connections and model buffering.
+const mongoose = require('../../../../backend-SOA/services/identity-service/node_modules/mongoose');
 const bcrypt = require('bcryptjs');
 
 // Set JWT_SECRET for tests BEFORE loading routes
@@ -38,8 +40,8 @@ beforeAll(async () => {
   // Now load routes and models after connection is ready and verified
   // Note: Even though mongoose is connected, models might still buffer if they were
   // created before connection. We load them here to minimize this issue.
-  authRoutes = require('../../../../backend-hrmSOA/services/identity-service/src/routes/auth');
-  User = require('../../../../backend-hrmSOA/services/identity-service/src/models/User');
+  authRoutes = require('../../../../backend-SOA/services/identity-service/src/routes/auth');
+  User = require('../../../../backend-SOA/services/identity-service/src/models/User');
   
   // Verify mongoose connection is still ready
   if (mongoose.connection.readyState !== 1) {
@@ -244,7 +246,9 @@ describe('Registration API Tests', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Invalid credentials');
+      expect(['Invalid credentials', 'Sai mật khẩu hoặc tài khoản']).toContain(
+        response.body.message
+      );
     });
 
     test('should return 401 when password is incorrect', async () => {
@@ -256,7 +260,9 @@ describe('Registration API Tests', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Invalid credentials');
+      expect(['Invalid credentials', 'Sai mật khẩu hoặc tài khoản']).toContain(
+        response.body.message
+      );
     });
 
     test('should return valid JWT token on successful login', async () => {

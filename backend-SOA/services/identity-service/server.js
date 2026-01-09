@@ -4,6 +4,7 @@ const cors = require('cors');
 const { connectAndSeed } = require('./src/config/db');
 const authRoutes = require('./src/routes/auth');
 const userRoutes = require('./src/routes/users');
+const { setupSwagger } = require('./swagger');
 
 const PORT = process.env.PORT || 5001;
 
@@ -14,6 +15,9 @@ async function start() {
   app.use(express.json());
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'identity' }));
+
+  // Swagger UI
+  setupSwagger(app);
 
   app.use('/auth', authRoutes);
   app.use('/users', userRoutes);
