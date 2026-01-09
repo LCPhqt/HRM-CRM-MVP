@@ -36,9 +36,9 @@ async function setup() {
   
   if (process.env.HEADLESS === 'true') {
     options.addArguments('--headless');
-    console.log('🔇 Chạy ở chế độ headless');
+    console.log(' Chạy ở chế độ headless');
   } else {
-    console.log('👀 Browser sẽ hiển thị');
+    console.log(' Browser sẽ hiển thị');
     options.addArguments('--start-maximized');
   }
 
@@ -47,13 +47,13 @@ async function setup() {
     fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
   }
 
-  console.log('🔧 Đang khởi động Chrome...');
+  console.log('Đang khởi động Chrome...');
   driver = await new Builder()
     .forBrowser('chrome')
     .setChromeOptions(options)
     .build();
   
-  console.log('✅ Browser đã khởi động!');
+  console.log(' Browser đã khởi động!');
   await driver.manage().setTimeouts({ implicit: TIMEOUT });
   
   // Setup alert handler
@@ -74,7 +74,7 @@ async function teardown() {
   if (driver) {
     try {
       await driver.quit();
-      console.log('✅ Browser đã đóng');
+      console.log(' Browser đã đóng');
     } catch (e) {
       console.error('Lỗi khi đóng browser:', e.message);
     }
@@ -110,7 +110,7 @@ async function handleAlert() {
 }
 
 async function createStaffAccount() {
-  console.log('📝 Đang tạo tài khoản nhân viên...');
+  console.log(' Đang tạo tài khoản nhân viên...');
   
   await driver.get(`${BASE_URL}/register`);
   await driver.sleep(1500);
@@ -119,20 +119,35 @@ async function createStaffAccount() {
   try {
     await driver.findElement(By.xpath("//label[contains(text(), 'Họ và tên')] | //input[@placeholder*='tên']"));
     isRegisterMode = true;
-    console.log('✅ Đã ở mode register');
+    console.log(' Đã ở mode register');
   } catch (e) {
-    console.log('⚠️  Đang ở mode login, chuyển sang mode register...');
+    console.log('  Đang ở mode login, chuyển sang mode register...');
     try {
-      const registerToggle = await driver.wait(
-        until.elementLocated(By.xpath("//button[contains(text(), 'Đăng ký ngay')] | //button[contains(text(), 'Đăng ký') and not(contains(@type, 'submit'))]")),
+      // Tìm link "Đăng ký ngay" (React Router Link, render thành <a>)
+      const registerLink = await driver.wait(
+        until.elementLocated(By.xpath("//a[contains(text(), 'Đăng ký ngay')]")),
         TIMEOUT
       );
-      await registerToggle.click();
-      await driver.sleep(1500);
+      await registerLink.click();
+      await driver.sleep(2000);
+      
+      // Kiểm tra lại xem đã ở register page chưa
+      const currentUrl = await driver.getCurrentUrl();
+      if (!currentUrl.includes('/register')) {
+        // Nếu vẫn chưa ở /register, thử navigate trực tiếp
+        await driver.get(`${BASE_URL}/register`);
+        await driver.sleep(1500);
+      }
+      
       isRegisterMode = true;
-      console.log('✅ Đã chuyển sang mode register');
+      console.log(' Đã chuyển sang mode register');
     } catch (e2) {
-      throw new Error('Không tìm thấy button để chuyển sang mode register');
+      // Fallback: navigate trực tiếp đến /register
+      console.log('  Không tìm thấy link, navigate trực tiếp đến /register...');
+      await driver.get(`${BASE_URL}/register`);
+      await driver.sleep(2000);
+      isRegisterMode = true;
+      console.log(' Đã navigate đến trang register');
     }
   }
   
@@ -145,9 +160,9 @@ async function createStaffAccount() {
     );
     await fullNameInput.clear();
     await fullNameInput.sendKeys('Nhân viên Test');
-    console.log('✅ Đã điền Họ và tên');
+    console.log(' Đã điền Họ và tên');
   } catch (e) {
-    console.log('⚠️  Không tìm thấy input Họ và tên, có thể không bắt buộc');
+    console.log('  Không tìm thấy input Họ và tên, có thể không bắt buộc');
   }
   
   const emailInput = await driver.wait(
@@ -194,20 +209,20 @@ async function createStaffAccount() {
     await alert.accept();
     
     if (alertText.includes('đã tồn tại') || alertText.includes('already exists')) {
-      console.log('⚠️  Tài khoản đã tồn tại, sẽ dùng tài khoản này');
+      console.log('  Tài khoản đã tồn tại, sẽ dùng tài khoản này');
     } else if (alertText.includes('thành công') || alertText.includes('success')) {
-      console.log('✅ Đăng ký thành công');
+      console.log(' Đăng ký thành công');
     }
   } catch (e) {
     // Không có alert
   }
   
   await driver.sleep(1000);
-  console.log(`✅ Đã tạo/kiểm tra tài khoản staff: ${TEST_STAFF_EMAIL}`);
+  console.log(` Đã tạo/kiểm tra tài khoản staff: ${TEST_STAFF_EMAIL}`);
 }
 
 async function loginAsStaff() {
-  console.log('🔐 Đang đăng nhập với tài khoản nhân viên...');
+  console.log(' Đang đăng nhập với tài khoản nhân viên...');
   
   await driver.get(`${BASE_URL}/login`);
   await driver.sleep(1000);
@@ -265,7 +280,7 @@ async function loginAsStaff() {
     throw new Error(`Login failed - still on login page. Alert: ${alertText || 'none'}`);
   }
   
-  console.log(`✅ Đã đăng nhập thành công với tài khoản staff: ${TEST_STAFF_EMAIL}`);
+  console.log(` Đã đăng nhập thành công với tài khoản staff: ${TEST_STAFF_EMAIL}`);
 }
 
 async function navigateToStaffCustomersPage() {
@@ -286,7 +301,7 @@ async function navigateToStaffCustomersPage() {
     throw new Error('Failed to navigate to customers page');
   }
   
-  console.log('✅ Đã điều hướng đến trang khách hàng');
+  console.log(' Đã điều hướng đến trang khách hàng');
 }
 
 async function addCustomer(customerData) {
@@ -318,7 +333,7 @@ async function addCustomer(customerData) {
       await emailInput.clear();
       await emailInput.sendKeys(customerData.email);
     } catch (e) {
-      console.log('⚠️  Email input not found, skipping');
+      console.log('  Email input not found, skipping');
     }
   }
   
@@ -328,7 +343,7 @@ async function addCustomer(customerData) {
       await phoneInput.clear();
       await phoneInput.sendKeys(customerData.phone);
     } catch (e) {
-      console.log('⚠️  Phone input not found, skipping');
+      console.log('  Phone input not found, skipping');
     }
   }
   
@@ -338,7 +353,7 @@ async function addCustomer(customerData) {
       await addressInput.clear();
       await addressInput.sendKeys(customerData.address);
     } catch (e) {
-      console.log('⚠️  Address input not found, skipping');
+      console.log('  Address input not found, skipping');
     }
   }
   
@@ -358,7 +373,7 @@ async function addCustomer(customerData) {
 }
 
 async function clearAllCustomers() {
-  console.log('🗑️  Đang xóa tất cả khách hàng...');
+  console.log('Đang xóa tất cả khách hàng...');
   // Note: Trong thực tế, có thể cần API để xóa hoặc xóa từng cái
   // Ở đây giả sử có nút xóa hoặc API
   // Tạm thời bỏ qua, test sẽ dựa vào dữ liệu hiện có
@@ -402,7 +417,7 @@ async function readExcelFile(filePath) {
 }
 
 async function testExportEmptyList() {
-  console.log('▶️  Test: Export Excel khi danh sách rỗng');
+  console.log('Test: Export Excel khi danh sách rỗng');
   
   await navigateToStaffCustomersPage();
   await driver.sleep(2000);
@@ -417,7 +432,7 @@ async function testExportEmptyList() {
   }
   
   if (hasCustomers) {
-    console.log('⚠️  Có khách hàng trong danh sách, test sẽ kiểm tra export với danh sách hiện có');
+    console.log('Có khách hàng trong danh sách, test sẽ kiểm tra export với danh sách hiện có');
   }
   
   // Click nút export
@@ -442,16 +457,16 @@ async function testExportEmptyList() {
     throw new Error('Excel file was not downloaded');
   }
   
-  console.log(`✅ File đã được download: ${path.basename(filePath)}`);
+  console.log(`File đã được download: ${path.basename(filePath)}`);
   
   // Đọc và kiểm tra file Excel
   const data = await readExcelFile(filePath);
   
   // Kiểm tra file có cấu trúc đúng
   if (data.length === 0) {
-    console.log('✅ File Excel rỗng (không có dữ liệu) - đúng với danh sách rỗng');
+    console.log('File Excel rỗng (không có dữ liệu) - đúng với danh sách rỗng');
   } else {
-    console.log(`✅ File Excel có ${data.length} dòng dữ liệu`);
+    console.log(`File Excel có ${data.length} dòng dữ liệu`);
     // Kiểm tra cấu trúc columns
     if (data.length > 0) {
       const firstRow = data[0];
@@ -460,7 +475,7 @@ async function testExportEmptyList() {
       if (!hasAllColumns) {
         throw new Error('Excel file missing required columns');
       }
-      console.log('✅ File Excel có đầy đủ các cột cần thiết');
+      console.log('File Excel có đầy đủ các cột cần thiết');
     }
   }
   
@@ -471,11 +486,11 @@ async function testExportEmptyList() {
     // Ignore
   }
   
-  console.log('✅ Test export danh sách rỗng/thường: PASSED');
+  console.log('Test export danh sách rỗng/thường: PASSED');
 }
 
 async function testExportWithSpecialCharacters() {
-  console.log('▶️  Test: Export Excel với ký tự đặc biệt');
+  console.log('Test: Export Excel với ký tự đặc biệt');
   
   await navigateToStaffCustomersPage();
   await driver.sleep(2000);
@@ -490,10 +505,10 @@ async function testExportWithSpecialCharacters() {
   
   try {
     await addCustomer(specialCharsCustomer);
-    console.log('✅ Đã thêm khách hàng với ký tự đặc biệt');
+    console.log('Đã thêm khách hàng với ký tự đặc biệt');
     await driver.sleep(2000);
   } catch (e) {
-    console.log(`⚠️  Không thể thêm khách hàng: ${e.message}`);
+    console.log(`Không thể thêm khách hàng: ${e.message}`);
     // Tiếp tục test với dữ liệu hiện có
   }
   
@@ -516,7 +531,7 @@ async function testExportWithSpecialCharacters() {
     throw new Error('Excel file was not downloaded');
   }
   
-  console.log(`✅ File đã được download: ${path.basename(filePath)}`);
+  console.log(`File đã được download: ${path.basename(filePath)}`);
   
   // Đọc và kiểm tra file
   const data = await readExcelFile(filePath);
@@ -532,7 +547,7 @@ async function testExportWithSpecialCharacters() {
   });
   
   if (foundSpecial) {
-    console.log('✅ Tìm thấy khách hàng với ký tự đặc biệt trong file Excel');
+    console.log('Tìm thấy khách hàng với ký tự đặc biệt trong file Excel');
     console.log(`   Tên: ${foundSpecial['Tên khách hàng']}`);
     console.log(`   Email: ${foundSpecial['Email']}`);
     console.log(`   Địa chỉ: ${foundSpecial['Địa chỉ']}`);
@@ -542,7 +557,7 @@ async function testExportWithSpecialCharacters() {
       throw new Error('Special characters were lost in export');
     }
   } else {
-    console.log('⚠️  Không tìm thấy khách hàng với ký tự đặc biệt (có thể chưa được thêm)');
+    console.log('Không tìm thấy khách hàng với ký tự đặc biệt (có thể chưa được thêm)');
   }
   
   // Cleanup
@@ -552,18 +567,18 @@ async function testExportWithSpecialCharacters() {
     // Ignore
   }
   
-  console.log('✅ Test export với ký tự đặc biệt: PASSED');
+  console.log('Test export với ký tự đặc biệt: PASSED');
 }
 
 async function testExportWithManyCustomers() {
-  console.log('▶️  Test: Export Excel với nhiều khách hàng');
+  console.log('Test: Export Excel với nhiều khách hàng');
   
   await navigateToStaffCustomersPage();
   await driver.sleep(2000);
   
   // Thêm nhiều khách hàng
   const customerCount = 10;
-  console.log(`📝 Đang thêm ${customerCount} khách hàng...`);
+  console.log(`Đang thêm ${customerCount} khách hàng...`);
   
   for (let i = 0; i < customerCount; i++) {
     try {
@@ -575,11 +590,11 @@ async function testExportWithManyCustomers() {
       });
       await driver.sleep(500); // Đợi giữa các lần thêm
     } catch (e) {
-      console.log(`⚠️  Không thể thêm khách hàng ${i + 1}: ${e.message}`);
+      console.log(`Không thể thêm khách hàng ${i + 1}: ${e.message}`);
     }
   }
   
-  console.log('✅ Đã thêm xong khách hàng');
+  console.log('Đã thêm xong khách hàng');
   await driver.sleep(2000);
   
   // Click nút export
@@ -603,11 +618,11 @@ async function testExportWithManyCustomers() {
     throw new Error('Excel file was not downloaded');
   }
   
-  console.log(`✅ File đã được download trong ${exportTime}ms: ${path.basename(filePath)}`);
+  console.log(`File đã được download trong ${exportTime}ms: ${path.basename(filePath)}`);
   
   // Kiểm tra file size
   const stats = fs.statSync(filePath);
-  console.log(`📊 File size: ${(stats.size / 1024).toFixed(2)} KB`);
+  console.log(`File size: ${(stats.size / 1024).toFixed(2)} KB`);
   
   if (stats.size === 0) {
     throw new Error('Excel file is empty');
@@ -615,7 +630,7 @@ async function testExportWithManyCustomers() {
   
   // Đọc và kiểm tra file
   const data = await readExcelFile(filePath);
-  console.log(`📊 Số dòng dữ liệu trong file: ${data.length}`);
+  console.log(`Số dòng dữ liệu trong file: ${data.length}`);
   
   if (data.length === 0) {
     throw new Error('Excel file should contain data');
@@ -624,7 +639,7 @@ async function testExportWithManyCustomers() {
   // Kiểm tra tất cả dòng có đầy đủ thông tin
   const incompleteRows = data.filter(row => !row['Tên khách hàng'] || !row['STT']);
   if (incompleteRows.length > 0) {
-    console.log(`⚠️  Có ${incompleteRows.length} dòng không đầy đủ thông tin`);
+    console.log(`Có ${incompleteRows.length} dòng không đầy đủ thông tin`);
   }
   
   // Cleanup
@@ -634,18 +649,18 @@ async function testExportWithManyCustomers() {
     // Ignore
   }
   
-  console.log('✅ Test export với nhiều khách hàng: PASSED');
+  console.log('Test export với nhiều khách hàng: PASSED');
 }
 
 async function testExportLargeData() {
-  console.log('▶️  Test: Export Excel với data lớn (không crash)');
+  console.log('Test: Export Excel với data lớn (không crash)');
   
   await navigateToStaffCustomersPage();
   await driver.sleep(2000);
   
   // Thêm nhiều khách hàng (50-100 để test data lớn)
   const largeCustomerCount = 50;
-  console.log(`📝 Đang thêm ${largeCustomerCount} khách hàng để test data lớn...`);
+  console.log(`Đang thêm ${largeCustomerCount} khách hàng để test data lớn...`);
   
   const startAddTime = Date.now();
   let successCount = 0;
@@ -664,13 +679,13 @@ async function testExportLargeData() {
       }
       await driver.sleep(300); // Giảm delay để nhanh hơn
     } catch (e) {
-      console.log(`⚠️  Không thể thêm khách hàng ${i + 1}: ${e.message}`);
+      console.log(`Không thể thêm khách hàng ${i + 1}: ${e.message}`);
       // Tiếp tục với khách hàng tiếp theo
     }
   }
   
   const addTime = Date.now() - startAddTime;
-  console.log(`✅ Đã thêm ${successCount}/${largeCustomerCount} khách hàng trong ${addTime}ms`);
+  console.log(`Đã thêm ${successCount}/${largeCustomerCount} khách hàng trong ${addTime}ms`);
   await driver.sleep(3000);
   
   // Kiểm tra browser không bị crash
@@ -679,7 +694,7 @@ async function testExportLargeData() {
     if (!currentUrl) {
       throw new Error('Browser may have crashed - cannot get current URL');
     }
-    console.log('✅ Browser vẫn hoạt động bình thường');
+    console.log('Browser vẫn hoạt động bình thường');
   } catch (e) {
     throw new Error(`Browser may have crashed: ${e.message}`);
   }
@@ -691,7 +706,7 @@ async function testExportLargeData() {
   );
   
   const startExportTime = Date.now();
-  console.log('📤 Bắt đầu export Excel...');
+  console.log('Bắt đầu export Excel...');
   
   await exportButton.click();
   
@@ -718,30 +733,30 @@ async function testExportLargeData() {
     }
   }
   
-  console.log(`✅ File đã được download trong ${exportTime}ms: ${path.basename(filePath)}`);
+  console.log(`File đã được download trong ${exportTime}ms: ${path.basename(filePath)}`);
   
   // Kiểm tra file size
   const stats = fs.statSync(filePath);
   const fileSizeKB = (stats.size / 1024).toFixed(2);
-  console.log(`📊 File size: ${fileSizeKB} KB`);
+  console.log(`File size: ${fileSizeKB} KB`);
   
   if (stats.size === 0) {
     throw new Error('Excel file is empty');
   }
   
   // Đọc file (có thể mất thời gian với file lớn)
-  console.log('📖 Đang đọc file Excel...');
+  console.log('Đang đọc file Excel...');
   const readStartTime = Date.now();
   const data = await readExcelFile(filePath);
   const readTime = Date.now() - readStartTime;
   
-  console.log(`📊 Số dòng dữ liệu: ${data.length}`);
-  console.log(`⏱️  Thời gian đọc file: ${readTime}ms`);
+  console.log(`Số dòng dữ liệu: ${data.length}`);
+  console.log(`Thời gian đọc file: ${readTime}ms`);
   
   // Kiểm tra browser vẫn hoạt động sau khi export
   try {
     const currentUrl = await driver.getCurrentUrl();
-    console.log(`✅ Browser vẫn hoạt động sau export: ${currentUrl}`);
+    console.log(`Browser vẫn hoạt động sau export: ${currentUrl}`);
   } catch (e) {
     throw new Error(`Browser crashed after export: ${e.message}`);
   }
@@ -749,7 +764,7 @@ async function testExportLargeData() {
   // Kiểm tra không có memory leak (file không quá lớn so với số dòng)
   const avgRowSize = stats.size / Math.max(data.length, 1);
   if (avgRowSize > 10000) { // > 10KB per row là bất thường
-    console.log(`⚠️  Warning: Average row size is ${(avgRowSize / 1024).toFixed(2)} KB, may indicate memory issue`);
+    console.log(`Warning: Average row size is ${(avgRowSize / 1024).toFixed(2)} KB, may indicate memory issue`);
   }
   
   // Cleanup
@@ -759,7 +774,7 @@ async function testExportLargeData() {
     // Ignore
   }
   
-  console.log('✅ Test export data lớn (không crash): PASSED');
+  console.log('Test export data lớn (không crash): PASSED');
 }
 
 async function checkBackendConnection() {
@@ -767,29 +782,29 @@ async function checkBackendConnection() {
     const gatewayUrl = process.env.TEST_GATEWAY_URL || 'http://127.0.0.1:4000';
     const req = http.get(`${gatewayUrl}/health`, { timeout: 2000 }, (res) => {
       if (res.statusCode === 200) {
-        console.log('✓ Backend server đang chạy\n');
+        console.log('Backend server đang chạy\n');
       } else {
-        console.warn('⚠️  Warning: Backend server có thể không chạy.');
+        console.warn('Warning: Backend server có thể không chạy.');
       }
       resolve();
     });
     
     req.on('error', () => {
-      console.warn('⚠️  Warning: Backend server có thể không chạy.');
+      console.warn('Warning: Backend server có thể không chạy.');
       resolve();
     });
     
     req.setTimeout(2000, () => {
       req.destroy();
-      console.warn('⚠️  Warning: Backend server có thể không chạy.');
+      console.warn('Warning: Backend server có thể không chạy.');
       resolve();
     });
   });
 }
 
 async function runTests() {
-  console.log('🚀 Bắt đầu chạy Staff Customer Export Excel Tests...\n');
-  console.log(`📍 Frontend URL: ${BASE_URL}\n`);
+  console.log('Bắt đầu chạy Staff Customer Export Excel Tests...\n');
+  console.log(`Frontend URL: ${BASE_URL}\n`);
   
   await checkBackendConnection();
   
@@ -810,23 +825,23 @@ async function runTests() {
     await setup();
     await createStaffAccount();
     await loginAsStaff();
-    console.log('🎬 Bắt đầu chạy test cases...\n');
+    console.log('Bắt đầu chạy test cases...\n');
 
     for (const test of tests) {
       try {
         console.log(`\n${'='.repeat(60)}`);
-        console.log(`▶️  Running: ${test.name}`);
+        console.log(`Running: ${test.name}`);
         console.log('='.repeat(60));
         await test.fn();
         results.passed++;
-        console.log(`✅ ${test.name} - PASSED\n`);
+        console.log(`${test.name} - PASSED\n`);
         if (process.env.HEADLESS !== 'true') {
           await driver.sleep(2000);
         }
       } catch (error) {
         results.failed++;
         results.errors.push({ test: test.name, error: error.message });
-        console.error(`❌ ${test.name} - FAILED: ${error.message}\n`);
+        console.error(`${test.name} - FAILED: ${error.message}\n`);
         if (process.env.HEADLESS !== 'true') {
           await driver.sleep(2000);
         }
@@ -840,14 +855,14 @@ async function runTests() {
   }
 
   console.log('\n' + '='.repeat(60));
-  console.log('📊 Test Results:');
+  console.log('Test Results:');
   console.log('='.repeat(60));
-  console.log(`✅ Passed: ${results.passed}`);
-  console.log(`❌ Failed: ${results.failed}`);
-  console.log(`📈 Pass Rate: ${((results.passed / (results.passed + results.failed)) * 100).toFixed(1)}%`);
+  console.log(`Passed: ${results.passed}`);
+  console.log(`Failed: ${results.failed}`);
+  console.log(`Pass Rate: ${((results.passed / (results.passed + results.failed)) * 100).toFixed(1)}%`);
   
   if (results.errors.length > 0) {
-    console.log('\n❌ Errors:');
+    console.log('\nErrors:');
     results.errors.forEach(({ test, error }) => {
       console.log(`   - ${test}: ${error}`);
     });
@@ -856,10 +871,10 @@ async function runTests() {
   // Kiểm tra pass rate >= 80%
   const passRate = (results.passed / (results.passed + results.failed)) * 100;
   if (passRate < 80) {
-    console.log(`\n⚠️  Warning: Pass rate (${passRate.toFixed(1)}%) is below 80%`);
+    console.log(`\nWarning: Pass rate (${passRate.toFixed(1)}%) is below 80%`);
     process.exit(1);
   } else {
-    console.log(`\n✅ Pass rate (${passRate.toFixed(1)}%) meets requirement (>= 80%)`);
+    console.log(`\nPass rate (${passRate.toFixed(1)}%) meets requirement (>= 80%)`);
   }
 
   process.exit(results.failed > 0 ? 1 : 0);

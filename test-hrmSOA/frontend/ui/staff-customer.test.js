@@ -18,19 +18,19 @@ async function setup() {
   
   if (process.env.HEADLESS === 'true') {
     options.addArguments('--headless');
-    console.log('🔇 Chạy ở chế độ headless');
+    console.log(' Chạy ở chế độ headless');
   } else {
-    console.log('👀 Browser sẽ hiển thị');
+    console.log(' Browser sẽ hiển thị');
     options.addArguments('--start-maximized');
   }
 
-  console.log('🔧 Đang khởi động Chrome...');
+  console.log(' Đang khởi động Chrome...');
   driver = await new Builder()
     .forBrowser('chrome')
     .setChromeOptions(options)
     .build();
   
-  console.log('✅ Browser đã khởi động!');
+  console.log(' Browser đã khởi động!');
   await driver.manage().setTimeouts({ implicit: TIMEOUT });
   
   // Setup alert handler
@@ -51,7 +51,7 @@ async function teardown() {
   if (driver) {
     try {
       await driver.quit();
-      console.log('✅ Browser đã đóng');
+      console.log(' Browser đã đóng');
     } catch (e) {
       console.error('Lỗi khi đóng browser:', e.message);
     }
@@ -72,33 +72,47 @@ async function handleAlert() {
 }
 
 async function createStaffAccount() {
-  console.log('📝 Đang tạo tài khoản nhân viên...');
+  console.log(' Đang tạo tài khoản nhân viên...');
   
   // Điều hướng đến trang register (hoặc login page với mode register)
   await driver.get(`${BASE_URL}/register`);
   await driver.sleep(1500);
   
   // Kiểm tra xem có đang ở mode register chưa bằng cách tìm full name input
-  // Nếu không có full name input, có thể đang ở mode login, cần chuyển sang register
+  // Nếu không có full name input, có thể đang ở mode login, cần navigate đến /register
   let isRegisterMode = false;
   try {
     await driver.findElement(By.xpath("//label[contains(text(), 'Họ và tên')] | //input[@placeholder*='tên']"));
     isRegisterMode = true;
-    console.log('✅ Đã ở mode register');
+    console.log(' Đã ở mode register');
   } catch (e) {
-    console.log('⚠️  Đang ở mode login, chuyển sang mode register...');
-    // Tìm và click button "Đăng ký ngay" để chuyển sang mode register
+    console.log('  Đang ở mode login, chuyển sang mode register...');
+    // Tìm và click link "Đăng ký ngay" (React Router Link) để navigate đến /register
     try {
-      const registerToggle = await driver.wait(
-        until.elementLocated(By.xpath("//button[contains(text(), 'Đăng ký ngay')] | //button[contains(text(), 'Đăng ký') and not(contains(@type, 'submit'))]")),
+      const registerLink = await driver.wait(
+        until.elementLocated(By.xpath("//a[contains(text(), 'Đăng ký ngay')] | //Link[contains(text(), 'Đăng ký ngay')]")),
         TIMEOUT
       );
-      await registerToggle.click();
-      await driver.sleep(1500);
+      await registerLink.click();
+      await driver.sleep(2000);
+      
+      // Kiểm tra lại xem đã ở register page chưa
+      const currentUrl = await driver.getCurrentUrl();
+      if (!currentUrl.includes('/register')) {
+        // Nếu vẫn chưa ở /register, thử navigate trực tiếp
+        await driver.get(`${BASE_URL}/register`);
+        await driver.sleep(1500);
+      }
+      
       isRegisterMode = true;
-      console.log('✅ Đã chuyển sang mode register');
+      console.log(' Đã chuyển sang mode register');
     } catch (e2) {
-      throw new Error('Không tìm thấy button để chuyển sang mode register. Cần click vào "Đăng ký ngay"');
+      // Fallback: navigate trực tiếp đến /register
+      console.log('  Không tìm thấy link, navigate trực tiếp đến /register...');
+      await driver.get(`${BASE_URL}/register`);
+      await driver.sleep(2000);
+      isRegisterMode = true;
+      console.log(' Đã navigate đến trang register');
     }
   }
   
@@ -113,9 +127,9 @@ async function createStaffAccount() {
     );
     await fullNameInput.clear();
     await fullNameInput.sendKeys('Nhân viên Test');
-    console.log('✅ Đã điền Họ và tên');
+    console.log(' Đã điền Họ và tên');
   } catch (e) {
-    console.log('⚠️  Không tìm thấy input Họ và tên, có thể không bắt buộc');
+    console.log('  Không tìm thấy input Họ và tên, có thể không bắt buộc');
   }
   
   // Tìm email input
@@ -182,11 +196,11 @@ async function createStaffAccount() {
     await alert.accept();
     
     if (alertText.includes('đã tồn tại') || alertText.includes('already exists')) {
-      console.log('⚠️  Tài khoản đã tồn tại, sẽ dùng tài khoản này để đăng nhập');
+      console.log('  Tài khoản đã tồn tại, sẽ dùng tài khoản này để đăng nhập');
     } else if (alertText.includes('thành công') || alertText.includes('success')) {
-      console.log('✅ Đăng ký thành công');
+      console.log(' Đăng ký thành công');
     } else {
-      console.log(`⚠️  Alert: ${alertText}`);
+      console.log(`  Alert: ${alertText}`);
     }
   } catch (e) {
     // Không có alert, có thể đã redirect
@@ -200,14 +214,14 @@ async function createStaffAccount() {
   // Sau khi đăng ký, nên chuyển về trang login
   if (!currentUrl.includes('/login') && !currentUrl.includes('/register')) {
     // Có thể đã redirect đến trang khác, không sao
-    console.log(`📍 Redirected to: ${currentUrl}`);
+    console.log(` Redirected to: ${currentUrl}`);
   }
   
-  console.log(`✅ Đã tạo/kiểm tra tài khoản staff: ${TEST_STAFF_EMAIL}`);
+  console.log(` Đã tạo/kiểm tra tài khoản staff: ${TEST_STAFF_EMAIL}`);
 }
 
 async function loginAsStaff() {
-  console.log('🔐 Đang đăng nhập với tài khoản nhân viên...');
+  console.log(' Đang đăng nhập với tài khoản nhân viên...');
   
   await driver.get(`${BASE_URL}/login`);
   await driver.sleep(1000);
@@ -273,8 +287,8 @@ async function loginAsStaff() {
   
   // Kiểm tra role là staff (có thể kiểm tra qua URL hoặc UI)
   // Staff thường được redirect đến /home hoặc /staff/*
-  console.log(`✅ Đã đăng nhập thành công với tài khoản staff: ${TEST_STAFF_EMAIL}`);
-  console.log(`📍 Current URL: ${currentUrl}`);
+  console.log(` Đã đăng nhập thành công với tài khoản staff: ${TEST_STAFF_EMAIL}`);
+  console.log(` Current URL: ${currentUrl}`);
 }
 
 async function navigateToStaffCustomersPage() {
@@ -299,11 +313,11 @@ async function navigateToStaffCustomersPage() {
     throw new Error('Failed to navigate to customers page');
   }
   
-  console.log('✅ Đã điều hướng đến trang khách hàng');
+  console.log(' Đã điều hướng đến trang khách hàng');
 }
 
 async function testAddCustomer() {
-  console.log('▶️  Test: Thêm khách hàng mới bằng tài khoản nhân viên');
+  console.log('  Test: Thêm khách hàng mới bằng tài khoản nhân viên');
   console.log(`👤 Đang sử dụng tài khoản staff: ${TEST_STAFF_EMAIL}`);
   
   await navigateToStaffCustomersPage();
@@ -345,7 +359,7 @@ async function testAddCustomer() {
     await emailInput.clear();
     await emailInput.sendKeys(customerEmail);
   } catch (e) {
-    console.log('⚠️  Email input not found, skipping');
+    console.log('  Email input not found, skipping');
   }
   
   // Số điện thoại
@@ -354,7 +368,7 @@ async function testAddCustomer() {
     await phoneInput.clear();
     await phoneInput.sendKeys(customerPhone);
   } catch (e) {
-    console.log('⚠️  Phone input not found, skipping');
+    console.log('  Phone input not found, skipping');
   }
   
   // Click nút "Lưu"
@@ -395,14 +409,14 @@ async function testAddCustomer() {
   
   // Kiểm tra khách hàng được tạo bởi staff hiện tại
   // (Staff chỉ thấy khách hàng của mình)
-  console.log(`✅ Đã thêm khách hàng: ${customerName}`);
-  console.log(`✅ Khách hàng được tạo bởi tài khoản staff: ${TEST_STAFF_EMAIL}`);
+  console.log(` Đã thêm khách hàng: ${customerName}`);
+  console.log(` Khách hàng được tạo bởi tài khoản staff: ${TEST_STAFF_EMAIL}`);
   
   return customerName;
 }
 
 async function testSearchCustomerByName() {
-  console.log('▶️  Test: Tìm kiếm khách hàng theo tên');
+  console.log('  Test: Tìm kiếm khách hàng theo tên');
   
   await navigateToStaffCustomersPage();
   await driver.sleep(1000);
@@ -429,7 +443,7 @@ async function testSearchCustomerByName() {
     try {
       const noDataMsg = await driver.findElement(By.xpath("//td[contains(text(), 'Chưa có khách hàng')]"));
       if (await noDataMsg.isDisplayed()) {
-        console.log('⚠️  Không tìm thấy khách hàng nào với từ khóa này');
+        console.log('  Không tìm thấy khách hàng nào với từ khóa này');
         // Không fail test, chỉ log warning
         return;
       }
@@ -454,10 +468,10 @@ async function testSearchCustomerByName() {
   }
   
   if (rowCount > 0 && !foundMatch) {
-    console.log('⚠️  Có kết quả nhưng không khớp với từ khóa tìm kiếm');
+    console.log('  Có kết quả nhưng không khớp với từ khóa tìm kiếm');
   }
   
-  console.log(`✅ Tìm kiếm hoạt động, tìm thấy ${rowCount} kết quả`);
+  console.log(` Tìm kiếm hoạt động, tìm thấy ${rowCount} kết quả`);
   
   // Test tìm kiếm với tên cụ thể (nếu đã thêm khách hàng trước đó)
   await searchInput.clear();
@@ -465,11 +479,11 @@ async function testSearchCustomerByName() {
   await driver.sleep(1500);
   
   const filteredRows = await driver.findElements(By.xpath("//tbody/tr"));
-  console.log(`✅ Tìm kiếm với tên cụ thể: ${filteredRows.length} kết quả`);
+  console.log(` Tìm kiếm với tên cụ thể: ${filteredRows.length} kết quả`);
 }
 
 async function testAddCustomerAndSearch() {
-  console.log('▶️  Test: Thêm khách hàng và tìm kiếm theo tên');
+  console.log('  Test: Thêm khách hàng và tìm kiếm theo tên');
   
   // Bước 1: Thêm khách hàng mới
   const customerName = await testAddCustomer();
@@ -505,7 +519,7 @@ async function testAddCustomerAndSearch() {
     throw new Error('Partial name search should return results');
   }
   
-  console.log(`✅ Đã tìm thấy khách hàng vừa thêm với tên: ${customerName}`);
+  console.log(` Đã tìm thấy khách hàng vừa thêm với tên: ${customerName}`);
 }
 
 async function checkBackendConnection() {
@@ -513,29 +527,29 @@ async function checkBackendConnection() {
     const gatewayUrl = process.env.TEST_GATEWAY_URL || 'http://127.0.0.1:4000';
     const req = http.get(`${gatewayUrl}/health`, { timeout: 2000 }, (res) => {
       if (res.statusCode === 200) {
-        console.log('✓ Backend server đang chạy\n');
+        console.log(' Backend server đang chạy\n');
       } else {
-        console.warn('⚠️  Warning: Backend server có thể không chạy.');
+        console.warn('  Warning: Backend server có thể không chạy.');
       }
       resolve();
     });
     
     req.on('error', () => {
-      console.warn('⚠️  Warning: Backend server có thể không chạy.');
+      console.warn('  Warning: Backend server có thể không chạy.');
       resolve();
     });
     
     req.setTimeout(2000, () => {
       req.destroy();
-      console.warn('⚠️  Warning: Backend server có thể không chạy.');
+      console.warn('  Warning: Backend server có thể không chạy.');
       resolve();
     });
   });
 }
 
 async function runTests() {
-  console.log('🚀 Bắt đầu chạy Staff Customer Tests...\n');
-  console.log(`📍 Frontend URL: ${BASE_URL}\n`);
+  console.log(' Bắt đầu chạy Staff Customer Tests...\n');
+  console.log(` Frontend URL: ${BASE_URL}\n`);
   
   await checkBackendConnection();
   
@@ -556,21 +570,21 @@ async function runTests() {
     // Tạo tài khoản staff trước khi test
     await createStaffAccount();
     await loginAsStaff();
-    console.log('🎬 Bắt đầu chạy test cases...\n');
+    console.log(' Bắt đầu chạy test cases...\n');
 
     for (const test of tests) {
       try {
-        console.log(`▶️  Running: ${test.name}`);
+        console.log(`  Running: ${test.name}`);
         await test.fn();
         results.passed++;
-        console.log(`✅ ${test.name} - PASSED\n`);
+        console.log(` ${test.name} - PASSED\n`);
         if (process.env.HEADLESS !== 'true') {
           await driver.sleep(1000);
         }
       } catch (error) {
         results.failed++;
         results.errors.push({ test: test.name, error: error.message });
-        console.error(`❌ ${test.name} - FAILED: ${error.message}\n`);
+        console.error(` ${test.name} - FAILED: ${error.message}\n`);
         if (process.env.HEADLESS !== 'true') {
           await driver.sleep(2000);
         }
@@ -583,12 +597,12 @@ async function runTests() {
     await teardown();
   }
 
-  console.log('\n📊 Test Results:');
-  console.log(`✅ Passed: ${results.passed}`);
-  console.log(`❌ Failed: ${results.failed}`);
+  console.log('\n Test Results:');
+  console.log(` Passed: ${results.passed}`);
+  console.log(` Failed: ${results.failed}`);
   
   if (results.errors.length > 0) {
-    console.log('\n❌ Errors:');
+    console.log('\n Errors:');
     results.errors.forEach(({ test, error }) => {
       console.log(`   - ${test}: ${error}`);
     });

@@ -53,39 +53,39 @@ cd ../../../frontend-hrmSOA && npm install
 Mở nhiều terminal, mỗi terminal chạy một service:
 ```bash
 # Identity (port 5001, auto seed admin)
-cd backend-hrmSOA/services/identity-service
+cd backend-SOA/services/identity-service
 npm run dev
 
 # Profile (port 5002)
-cd backend-hrmSOA/services/profile-service
+cd backend-SOA/services/profile-service
 npm run dev
 
 # Admin-HR (port 5003)
-cd backend-hrmSOA/services/admin-hr-service
+cd backend-SOA/services/admin-hr-service
 npm run dev
 
 # Payroll (port 5004)
-cd backend-hrmSOA/services/payroll-service
+cd backend-SOA/services/payroll-service
 npm run dev
 
 # Department (port 5006)
-cd backend-hrmSOA/services/department-service
+cd backend-SOA/services/department-service
 npm run dev
 
 # CRM (port 5007)
-cd backend-hrmSOA/services/crm-service
+cd backend-SOA/services/crm-service
 npm run dev
 ```
 
 Sau đó chạy Gateway:
 ```bash
-cd backend-hrmSOA/gateway
+cd backend-SOA/gateway
 npm run dev   # lắng nghe port 4000, proxy các service
 ```
 
 ### 6) Chạy frontend
 ```bash
-cd frontend-hrmSOA
+cd frontend-SOA
 npm run dev   # mặc định Vite port 5173
 ```
 Truy cập: `http://localhost:5173`

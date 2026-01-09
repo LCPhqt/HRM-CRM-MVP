@@ -8,7 +8,7 @@ Folder này chứa tất cả các tests cho dự án HRM SOA, được tổ ch�
 test-hrmSOA/
 ├── backend/
 │   └── identity-service/
-│       ├── __tests__/
+│       ├── tests/
 │       │   └── authController.test.js  # Unit tests cho API đăng ký/đăng nhập
 │       ├── setup.js                    # Jest setup cho database
 │       └── jest.config.js              # Jest configuration

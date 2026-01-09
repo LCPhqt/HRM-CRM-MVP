@@ -38,8 +38,10 @@ beforeAll(async () => {
   // Now load routes and models after connection is ready and verified
   // Note: Even though mongoose is connected, models might still buffer if they were
   // created before connection. We load them here to minimize this issue.
-  authRoutes = require('../../../../backend-hrmSOA/services/identity-service/src/routes/auth');
-  User = require('../../../../backend-hrmSOA/services/identity-service/src/models/User');
+  const path = require('path');
+  const backendPath = path.resolve(__dirname, '../../../../backend-SOA/services/identity-service/src');
+  authRoutes = require(path.join(backendPath, 'routes/auth'));
+  User = require(path.join(backendPath, 'models/User'));
   
   // Verify mongoose connection is still ready
   if (mongoose.connection.readyState !== 1) {

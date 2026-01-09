@@ -23,7 +23,7 @@
 | **Reporter** | AI Assistant |
 | **Ngày tạo** | Hôm nay |
 | **Ngày cập nhật** | Hôm nay |
-| **File liên quan** | `test-hrmSOA/backend/identity-service/__tests__/authController.test.js` |
+| **File liên quan** | `test-hrmSOA/backend/identity-service/tests/authController.test.js` |
 | **Test Cases ảnh hưởng** | 10/13 backend tests (77%) |
 
 #### Mô tả

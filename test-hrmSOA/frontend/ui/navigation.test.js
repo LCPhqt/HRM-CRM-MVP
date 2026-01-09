@@ -17,23 +17,23 @@ async function setup() {
   
   if (process.env.HEADLESS === 'true') {
     options.addArguments('--headless');
-    console.log('🔇 Chạy ở chế độ headless');
+    console.log(' Chạy ở chế độ headless');
   } else {
-    console.log('👀 Browser sẽ hiển thị');
+    console.log(' Browser sẽ hiển thị');
     options.addArguments('--start-maximized');
   }
 
-  console.log('🔧 Đang khởi động Chrome...');
+  console.log(' Đang khởi động Chrome...');
   driver = await new Builder()
     .forBrowser('chrome')
     .setChromeOptions(options)
     .build();
   
-  console.log('✅ Browser đã khởi động!');
+  console.log(' Browser đã khởi động!');
   await driver.sleep(2000);
   await driver.get('about:blank');
   await driver.sleep(1000);
-  console.log('✅ Browser đã sẵn sàng!\n');
+  console.log(' Browser đã sẵn sàng!\n');
   
   await driver.manage().setTimeouts({ implicit: TIMEOUT });
   
@@ -55,7 +55,7 @@ async function teardown() {
   if (driver) {
     try {
       await driver.quit();
-      console.log('✅ Browser đã đóng');
+      console.log(' Browser đã đóng');
     } catch (e) {
       console.error('Lỗi khi đóng browser:', e.message);
     }
@@ -80,21 +80,21 @@ async function checkBackendConnection() {
     const gatewayUrl = process.env.TEST_GATEWAY_URL || 'http://127.0.0.1:4000';
     const req = http.get(`${gatewayUrl}/health`, { timeout: 2000 }, (res) => {
       if (res.statusCode === 200) {
-        console.log('✓ Backend server đang chạy\n');
+        console.log(' Backend server đang chạy\n');
       } else {
-        console.warn('⚠️  Warning: Backend server có thể không chạy. Một số tests có thể fail.\n');
+        console.warn('  Warning: Backend server có thể không chạy. Một số tests có thể fail.\n');
       }
       resolve();
     });
     
     req.on('error', () => {
-      console.warn('⚠️  Warning: Backend server có thể không chạy. Một số tests có thể fail.\n');
+      console.warn('  Warning: Backend server có thể không chạy. Một số tests có thể fail.\n');
       resolve();
     });
     
     req.setTimeout(2000, () => {
       req.destroy();
-      console.warn('⚠️  Warning: Backend server có thể không chạy. Một số tests có thể fail.\n');
+      console.warn('  Warning: Backend server có thể không chạy. Một số tests có thể fail.\n');
       resolve();
     });
   });
@@ -322,7 +322,7 @@ async function testRegisterRedirectToLogin() {
   // Kiểm tra có alert thành công
   const alertText = await handleAlert();
   if (!alertText || !alertText.includes('Đăng ký thành công')) {
-    console.warn('⚠️  Không thấy alert "Đăng ký thành công". Có thể đăng ký thất bại hoặc alert không hiển thị.');
+    console.warn('  Không thấy alert "Đăng ký thành công". Có thể đăng ký thất bại hoặc alert không hiển thị.');
   }
 
   // Đợi redirect
@@ -399,7 +399,7 @@ async function testAdminSidebarNavigation() {
         throw new Error(`Menu "${item.label}" không navigate đúng. Expected: ${item.path}, Got: ${currentPath}`);
       }
 
-      console.log(`  ✓ Menu "${item.label}" navigate đúng đến ${item.path}`);
+      console.log(`   Menu "${item.label}" navigate đúng đến ${item.path}`);
     } catch (error) {
       throw new Error(`Lỗi khi test menu "${item.label}": ${error.message}`);
     }
@@ -422,7 +422,7 @@ async function testStaffSidebarNavigation() {
   const staffPassword = process.env.TEST_STAFF_PASSWORD;
 
   if (!staffEmail || !staffPassword) {
-    console.log('⚠️  Không có TEST_STAFF_EMAIL và TEST_STAFF_PASSWORD. Skipping staff sidebar test.');
+    console.log('  Không có TEST_STAFF_EMAIL và TEST_STAFF_PASSWORD. Skipping staff sidebar test.');
     return;
   }
 
@@ -463,7 +463,7 @@ async function testStaffSidebarNavigation() {
         throw new Error(`Menu "${item.label}" không navigate đúng. Expected: ${item.path}, Got: ${currentPath}`);
       }
 
-      console.log(`  ✓ Menu "${item.label}" navigate đúng đến ${item.path}`);
+      console.log(`   Menu "${item.label}" navigate đúng đến ${item.path}`);
     } catch (error) {
       throw new Error(`Lỗi khi test menu "${item.label}": ${error.message}`);
     }
@@ -486,8 +486,8 @@ async function testProtectedRouteRedirect() {
 }
 
 async function runTests() {
-  console.log('🚀 Bắt đầu chạy Navigation Tests...\n');
-  console.log(`📍 Frontend URL: ${BASE_URL}\n`);
+  console.log(' Bắt đầu chạy Navigation Tests...\n');
+  console.log(` Frontend URL: ${BASE_URL}\n`);
   
   await checkBackendConnection();
   
@@ -531,21 +531,21 @@ async function runTests() {
 
   try {
     await setup();
-    console.log('🎬 Bắt đầu chạy test cases...\n');
+    console.log(' Bắt đầu chạy test cases...\n');
 
     for (const test of tests) {
       try {
-        console.log(`▶️  Running: ${test.name}`);
+        console.log(`  Running: ${test.name}`);
         await test.fn();
         results.passed++;
-        console.log(`✅ ${test.name} - PASSED\n`);
+        console.log(` ${test.name} - PASSED\n`);
         if (process.env.HEADLESS !== 'true') {
           await driver.sleep(1000);
         }
       } catch (error) {
         results.failed++;
         results.errors.push({ test: test.name, error: error.message });
-        console.error(`❌ ${test.name} - FAILED: ${error.message}\n`);
+        console.error(` ${test.name} - FAILED: ${error.message}\n`);
         
         // Ghi nhận bug
         results.bugs.push({
@@ -566,19 +566,19 @@ async function runTests() {
     await teardown();
   }
 
-  console.log('\n📊 Test Results:');
-  console.log(`✅ Passed: ${results.passed}`);
-  console.log(`❌ Failed: ${results.failed}`);
+  console.log('\n Test Results:');
+  console.log(` Passed: ${results.passed}`);
+  console.log(` Failed: ${results.failed}`);
   
   if (results.errors.length > 0) {
-    console.log('\n❌ Errors:');
+    console.log('\n Errors:');
     results.errors.forEach(({ test, error }) => {
       console.log(`   - ${test}: ${error}`);
     });
   }
 
   if (results.bugs.length > 0) {
-    console.log('\n🐛 Bugs phát hiện được:');
+    console.log('\n Bugs phát hiện được:');
     results.bugs.forEach(({ test, description, severity }) => {
       console.log(`   - [${severity}] ${test}`);
       console.log(`     Mô tả: ${description}`);

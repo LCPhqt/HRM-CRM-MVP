@@ -18,20 +18,20 @@ async function setup() {
   // Chỉ headless nếu HEADLESS=true
   if (process.env.HEADLESS === 'true') {
     options.addArguments('--headless');
-    console.log('🔇 Chạy ở chế độ headless');
+    console.log(' Chạy ở chế độ headless');
   } else {
-    console.log('👀 Browser sẽ hiển thị');
+    console.log(' Browser sẽ hiển thị');
     options.addArguments('--start-maximized');
   }
 
-  console.log('🔧 Đang khởi động Chrome...');
+  console.log(' Đang khởi động Chrome...');
   driver = await new Builder()
     .forBrowser('chrome')
     .setChromeOptions(options)
     .build();
   
-  console.log('✅ Browser đã khởi động!');
-  console.log('📱 Browser window sẽ hiển thị trong vài giây...');
+  console.log(' Browser đã khởi động!');
+  console.log(' Browser window sẽ hiển thị trong vài giây...');
   
   // Đợi browser hiển thị
   await driver.sleep(2000);
@@ -39,7 +39,7 @@ async function setup() {
   // Mở một trang để đảm bảo browser hiển thị
   await driver.get('about:blank');
   await driver.sleep(1000);
-  console.log('✅ Browser đã sẵn sàng!\n');
+  console.log(' Browser đã sẵn sàng!\n');
   
   await driver.manage().setTimeouts({ implicit: TIMEOUT });
   
@@ -61,7 +61,7 @@ async function teardown() {
   if (driver) {
     try {
       await driver.quit();
-      console.log('✅ Browser đã đóng');
+      console.log(' Browser đã đóng');
     } catch (e) {
       console.error('Lỗi khi đóng browser:', e.message);
     }
@@ -86,9 +86,9 @@ async function checkBackendConnection() {
     const gatewayUrl = process.env.TEST_GATEWAY_URL || 'http://127.0.0.1:4000';
     const req = http.get(`${gatewayUrl}/health`, { timeout: 2000 }, (res) => {
       if (res.statusCode === 200) {
-        console.log('✓ Backend server đang chạy\n');
+        console.log(' Backend server đang chạy\n');
       } else {
-        console.warn('⚠️  Warning: Backend server có thể không chạy. Một số tests có thể fail.');
+        console.warn('  Warning: Backend server có thể không chạy. Một số tests có thể fail.');
         console.warn('   Vui lòng đảm bảo backend services đang chạy trước khi chạy UI tests:');
         console.warn('   1. Gateway: http://localhost:4000');
         console.warn('   2. Identity Service: http://localhost:5001');
@@ -98,7 +98,7 @@ async function checkBackendConnection() {
     });
     
     req.on('error', () => {
-      console.warn('⚠️  Warning: Backend server có thể không chạy. Một số tests có thể fail.');
+      console.warn('  Warning: Backend server có thể không chạy. Một số tests có thể fail.');
       console.warn('   Vui lòng đảm bảo backend services đang chạy trước khi chạy UI tests:');
       console.warn('   1. Gateway: http://localhost:4000');
       console.warn('   2. Identity Service: http://localhost:5001');
@@ -108,7 +108,7 @@ async function checkBackendConnection() {
     
     req.setTimeout(2000, () => {
       req.destroy();
-      console.warn('⚠️  Warning: Backend server có thể không chạy. Một số tests có thể fail.');
+      console.warn('  Warning: Backend server có thể không chạy. Một số tests có thể fail.');
       console.warn('   Vui lòng đảm bảo backend services đang chạy trước khi chạy UI tests:');
       console.warn('   1. Gateway: http://localhost:4000');
       console.warn('   2. Identity Service: http://localhost:5001');
@@ -176,7 +176,7 @@ async function testRegisterPageElements() {
   try {
     const loginLink = await driver.findElement(By.xpath("//a[contains(text(), 'Đăng nhập')] | //button[contains(text(), 'Đăng nhập')]"));
     if (await loginLink.isDisplayed()) {
-      console.log('✅ Login link/button found on register page');
+      console.log(' Login link/button found on register page');
     }
   } catch (e) {
     // Không bắt buộc phải có login link
@@ -256,7 +256,7 @@ async function testRegisterNavigationToLogin() {
     }
   } catch (e) {
     // Nếu không tìm thấy login link, có thể navigation được thực hiện bằng cách khác
-    console.log('⚠️  Login link not found, navigation might be implemented differently');
+    console.log('  Login link not found, navigation might be implemented differently');
   }
 }
 
@@ -275,10 +275,10 @@ async function testRegisterFormInputFields() {
       throw new Error('Full Name input should accept input');
     }
     await fullNameInput.clear();
-    console.log('✅ Full Name input tested');
+    console.log(' Full Name input tested');
   } catch (e) {
     // Full Name có thể không có trong form, không bắt buộc
-    console.log('⚠️  Full Name input not found, may be optional');
+    console.log('  Full Name input not found, may be optional');
   }
   
   // Test email input
@@ -357,10 +357,10 @@ async function testRegisterFullNameInput() {
       throw new Error('Full Name input should be clearable');
     }
     
-    console.log('✅ Full Name input validation passed');
+    console.log(' Full Name input validation passed');
   } catch (e) {
     if (e.message.includes('NoSuchElementException') || e.message.includes('timeout')) {
-      console.log('⚠️  Full Name input not found in registration form');
+      console.log('  Full Name input not found in registration form');
       // Không fail test nếu Full Name không có trong form
     } else {
       throw e;
@@ -1136,8 +1136,8 @@ async function testRegisterThenLoginAgain() {
 }
 
 async function runTests() {
-  console.log('🚀 Bắt đầu chạy UI Tests...\n');
-  console.log(`📍 Frontend URL: ${BASE_URL}\n`);
+  console.log(' Bắt đầu chạy UI Tests...\n');
+  console.log(` Frontend URL: ${BASE_URL}\n`);
   
   await checkBackendConnection();
   
@@ -1156,21 +1156,21 @@ async function runTests() {
 
   try {
     await setup();
-    console.log('🎬 Bắt đầu chạy test cases...\n');
+    console.log(' Bắt đầu chạy test cases...\n');
 
     for (const test of tests) {
       try {
-        console.log(`▶️  Running: ${test.name}`);
+        console.log(`  Running: ${test.name}`);
         await test.fn();
         results.passed++;
-        console.log(`✅ ${test.name} - PASSED\n`);
+        console.log(` ${test.name} - PASSED\n`);
         if (process.env.HEADLESS !== 'true') {
           await driver.sleep(1000);
         }
       } catch (error) {
         results.failed++;
         results.errors.push({ test: test.name, error: error.message });
-        console.error(`❌ ${test.name} - FAILED: ${error.message}\n`);
+        console.error(` ${test.name} - FAILED: ${error.message}\n`);
         if (process.env.HEADLESS !== 'true') {
           await driver.sleep(2000);
         }
@@ -1183,12 +1183,12 @@ async function runTests() {
     await teardown();
   }
 
-  console.log('\n📊 Test Results:');
-  console.log(`✅ Passed: ${results.passed}`);
-  console.log(`❌ Failed: ${results.failed}`);
+  console.log('\n Test Results:');
+  console.log(` Passed: ${results.passed}`);
+  console.log(` Failed: ${results.failed}`);
   
   if (results.errors.length > 0) {
-    console.log('\n❌ Errors:');
+    console.log('\n Errors:');
     results.errors.forEach(({ test, error }) => {
       console.log(`   - ${test}: ${error}`);
     });
